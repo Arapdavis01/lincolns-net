@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Lincoln's net - WiFi Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 36px;
+            color: white;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 24px;
+        }
+        
+        .packages {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .package-card {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .package-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .package-card.selected {
+            border-color: #667eea;
+            background: #f7fafc;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+        
+        .package-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .package-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .package-description {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .package-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        
+        .package-details {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .package-badge {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #2d3748;
+            transition: all 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+        
+        .error-message {
+            color: #e53e3e;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .submit-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+        }
+        
+        .submit-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .submit-button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            -webkit-animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
+        }
+        
+        @-webkit-keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        
+        @media (max-width: 360px) {
+            .container {
+                padding: 24px 16px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .package-name {
+                font-size: 16px;
+            }
+            
+            .package-price {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📶</div>
+            <h1 class="title">Lincoln's net</h1>
+            <p class="subtitle">Fast, Reliable WiFi Access</p>
+        </div>
+        
+        <form id="paymentForm" action="/pay" method="POST">
+            <input type="hidden" name="mac" id="macInput" value="{{ mac_address }}">
+            <input type="hidden" name="ip" id="ipInput" value="{{ ip_address }}">
+            <input type="hidden" name="link_login_only" id="linkLoginInput" value="{{ link_login_only }}">
+            <input type="hidden" name="package_id" id="packageIdInput" value="">
+            
+            <div class="packages" id="packageContainer">
+                {% for package in packages %}
+                <div class="package-card" data-package-id="{{ package.id }}" onclick="selectPackage(this)">
+                    <div class="package-name">{{ package.name }}</div>
+                    {% if package.description %}
+                    <div class="package-description">{{ package.description }}</div>
+                    {% endif %}
+                    <div class="package-price">{{ package.price }}</div>
+                    <div class="package-details">
+                        <span class="package-badge">⏱ {{ package.duration_display }}</span>
+                        <span class="package-badge">📥 {{ package.download_rate }}</span>
+                        <span class="package-badge">📤 {{ package.upload_rate }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="phoneNumber">Phone Number (M-Pesa)</label>
+                <input 
+                    type="tel" 
+                    id="phoneNumber" 
+                    name="phone_number" 
+                    class="form-input" 
+                    placeholder="e.g., 0712345678"
+                    pattern="[0-9]{10}"
+                    maxlength="10"
+                    inputmode="numeric"
+                    required
+                >
+                <div class="error-message" id="phoneError">Please enter a valid phone number</div>
+            </div>
+            
+            <button type="submit" class="submit-button" id="submitButton">
+                Connect Now
+            </button>
+        </form>
+        
+        <div class="footer">
+            Secure payment via M-Pesa | Powered by Lincoln's net
+        </div>
+    </div>
+    
+    <script>
+        let selectedPackageId = null;
+        
+        function selectPackage(element) {
+            // Remove selection from all packages
+            document.querySelectorAll('.package-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked package
+            element.classList.add('selected');
+            selectedPackageId = element.dataset.packageId;
+            document.getElementById('packageIdInput').value = selectedPackageId;
+        }
+        
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate package selection
+            if (!selectedPackageId) {
+                alert('Please select a package');
+                return;
+            }
+            
+            // Validate phone number
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const phoneRegex = /^[0-9]{10}$/;
+            
+            if (!phoneRegex.test(phoneNumber)) {
+                document.getElementById('phoneError').style.display = 'block';
+                return;
+            }
+            
+            // Disable button and show loading
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="loading"></span> Processing...';
+            
+            // Submit form
+            this.submit();
+        });
+        
+        // Phone number input validation
+        document.getElementById('phoneNumber').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            document.getElementById('phoneError').style.display = 'none';
+        });
+        
+        // Auto-select first package on mobile devices
+        if (window.innerWidth <= 480) {
+            const firstPackage = document.querySelector('.package-card');
+            if (firstPackage) {
+                selectPackage(firstPackage);
+            }
+        }
+    </script>
+</body>
+</html>

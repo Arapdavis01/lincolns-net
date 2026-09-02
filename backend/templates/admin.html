@@ -2,85 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2d3748">
     <title>Lincoln's net Administration Console</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
+        /* Sidebar Styles */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
             bottom: 0;
-            width: 250px;
-            background: #2d3748;
-            padding: 20px;
+            width: 280px;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            padding: 24px 16px;
             color: white;
-            transition: transform 0.3s;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            overflow-y: auto;
         }
         
         .sidebar-header {
-            margin-bottom: 30px;
+            margin-bottom: 32px;
+            padding: 0 12px;
         }
         
         .sidebar-title {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .sidebar-subtitle {
-            font-size: 14px;
+            font-size: 13px;
             color: #a0aec0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
         
         .nav-menu {
             list-style: none;
+            padding: 0;
         }
         
         .nav-item {
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         
         .nav-link {
-            display: block;
-            padding: 12px;
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
             color: #cbd5e0;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 10px;
             transition: all 0.3s;
+            font-size: 15px;
+            font-weight: 500;
+            position: relative;
         }
         
-        .nav-link:hover,
-        .nav-link.active {
-            background: #4a5568;
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
             color: white;
+            transform: translateX(4px);
         }
         
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .nav-link .nav-icon {
+            margin-right: 12px;
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .nav-link .nav-badge {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e53e3e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        /* Main Content Styles */
         .main-content {
-            margin-left: 250px;
-            padding: 30px;
+            margin-left: 280px;
+            padding: 32px;
+            min-height: 100vh;
         }
         
         .header {
-            margin-bottom: 30px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .header-left {
+            flex: 1;
         }
         
         .title {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 700;
             color: #2d3748;
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         
         .subtitle {
@@ -88,115 +145,245 @@
             color: #718096;
         }
         
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
         
         .stat-card {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
         .stat-label {
-            font-size: 14px;
+            font-size: 13px;
             color: #718096;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
         
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
             color: #2d3748;
+            margin-bottom: 8px;
         }
         
+        .stat-change {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .stat-change.positive {
+            color: #48bb78;
+        }
+        
+        .stat-change.negative {
+            color: #e53e3e;
+        }
+        
+        /* Card Styles */
         .card {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 24px;
             margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
         }
         
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
         
         .card-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 600;
             color: #2d3748;
         }
         
+        .card-subtitle {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 4px;
+        }
+        
+        /* Button Styles */
         .btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .btn-primary {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
         
-        .btn-primary:hover {
-            background: #5a67d8;
+        .btn-success {
+            background: #48bb78;
+            color: white;
+            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+        }
+        
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+            box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
         }
         
         .btn-danger {
             background: #e53e3e;
             color: white;
+            box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
         }
         
-        .btn-danger:hover {
-            background: #c53030;
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
         }
         
         .btn-sm {
             padding: 6px 12px;
             font-size: 12px;
+            border-radius: 6px;
+        }
+        
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+        
+        /* Table Styles */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         .table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
         
         .table th {
             text-align: left;
-            padding: 12px;
+            padding: 14px 16px;
             background: #f7fafc;
             color: #4a5568;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
         
         .table td {
-            padding: 12px;
+            padding: 14px 16px;
             border-bottom: 1px solid #e2e8f0;
             font-size: 14px;
+            color: #4a5568;
         }
         
-        .table tr:hover {
+        .table tbody tr {
+            transition: all 0.2s;
+        }
+        
+        .table tbody tr:hover {
             background: #f7fafc;
         }
         
+        /* Status Badge Styles */
         .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .status-success {
@@ -214,6 +401,117 @@
             color: #742a2a;
         }
         
+        .status-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-inactive {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .status-production {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-sandbox {
+            background: #fefcbf;
+            color: #744210;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: white;
+            color: #2d3748;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+        
+        .form-input:disabled {
+            background: #f7fafc;
+            cursor: not-allowed;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            color: #2d3748;
+            cursor: pointer;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+        
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .form-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+        
+        .form-error {
+            color: #e53e3e;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -221,10 +519,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
         }
         
         .modal.open {
@@ -233,240 +533,704 @@
         
         .modal-content {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .form-group {
-            margin-bottom: 16px;
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
         
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 4px;
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
             color: #4a5568;
+            transform: rotate(90deg);
+        }
+        
+        /* Alert Styles */
+        .alert {
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
             font-weight: 500;
         }
         
-        .form-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
+        .alert-success {
+            background: #f0fff4;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
         }
         
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
+        .alert-warning {
+            background: #fffbeb;
+            color: #744210;
+            border-left: 4px solid #ed8936;
+        }
+        
+        .alert-error {
+            background: #fff5f5;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+        
+        .alert-info {
+            background: #ebf8ff;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 24px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 16px;
+            }
         }
         
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
+                width: 280px;
             }
             
             .sidebar.open {
                 transform: translateX(0);
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
             }
             
             .main-content {
                 margin-left: 0;
-                padding: 20px;
+                padding: 16px;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .title {
+                font-size: 28px;
             }
             
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .stat-card {
+                padding: 16px;
+            }
+            
+            .stat-value {
+                font-size: 24px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
+                max-height: 85vh;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
             }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-title">Lincoln's net</div>
-            <div class="sidebar-subtitle">Admin Console</div>
+            <div class="sidebar-subtitle">Administration Console</div>
         </div>
         <ul class="nav-menu">
             <li class="nav-item">
-                <a href="#dashboard" class="nav-link active">Dashboard</a>
+                <a href="#dashboard" class="nav-link active" onclick="navigateTo('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
             </li>
             <li class="nav-item">
-                <a href="#packages" class="nav-link">Packages</a>
+                <a href="#packages" class="nav-link" onclick="navigateTo('packages')">
+                    <span class="nav-icon">📦</span>
+                    Packages
+                </a>
             </li>
             <li class="nav-item">
-                <a href="#transactions" class="nav-link">Transactions</a>
+                <a href="#payment-gateway" class="nav-link" onclick="navigateTo('payment-gateway')">
+                    <span class="nav-icon">💳</span>
+                    Payment Gateway
+                </a>
             </li>
             <li class="nav-item">
-                <a href="#settings" class="nav-link">Settings</a>
+                <a href="#transactions" class="nav-link" onclick="navigateTo('transactions')">
+                    <span class="nav-icon">🔄</span>
+                    Transactions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#settings" class="nav-link" onclick="navigateTo('settings')">
+                    <span class="nav-icon">⚙️</span>
+                    Settings
+                </a>
             </li>
         </ul>
     </div>
     
+    <!-- Main Content -->
     <div class="main-content">
         <div class="header">
-            <h1 class="title">Lincoln's net Administration Console</h1>
-            <p class="subtitle">Manage your WiFi billing system</p>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Packages</div>
-                <div class="stat-value">{{ stats.total_packages }}</div>
+            <div class="header-left">
+                <h1 class="title">Lincoln's net Administration Console</h1>
+                <p class="subtitle">Manage your WiFi billing system and payment gateway</p>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Active Users</div>
-                <div class="stat-value">{{ stats.active_transactions }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Revenue</div>
-                <div class="stat-value">{{ stats.total_revenue }}</div>
+            <div class="header-actions">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
             </div>
         </div>
         
-        <div class="card" id="packages">
-            <div class="card-header">
-                <h2 class="card-title">Internet Packages</h2>
-                <button class="btn btn-primary" onclick="openPackageModal()">Add Package</button>
-            </div>
-            
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Duration</th>
-                        <th>Download</th>
-                        <th>Upload</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for package in packages %}
-                    <tr>
-                        <td>{{ package.name }}</td>
-                        <td>${{ "%.2f"|format(package.price) }}</td>
-                        <td>{{ package.duration_seconds }}s</td>
-                        <td>{{ package.download_rate_limit }}</td>
-                        <td>{{ package.upload_rate_limit }}</td>
-                        <td>
-                            <span class="status-badge status-{{ 'success' if package.is_active else 'failed' }}">
-                                {{ 'Active' if package.is_active else 'Inactive' }}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-primary btn-sm" onclick="editPackage({{ package.id }})">Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="deletePackage({{ package.id }})">Delete</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="card" id="transactions">
-            <div class="card-header">
-                <h2 class="card-title">Recent Transactions</h2>
-            </div>
-            
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Transaction ID</th>
-                        <th>Phone Number</th>
-                        <th>Amount</th>
-                        <th>MAC Address</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for transaction in transactions %}
-                    <tr>
-                        <td>{{ transaction.transaction_id[:8] }}...</td>
-                        <td>{{ transaction.phone_number }}</td>
-                        <td>${{ "%.2f"|format(transaction.amount) }}</td>
-                        <td>{{ transaction.mac_address }}</td>
-                        <td>
-                            <span class="status-badge status-{{ transaction.status|lower }}">
-                                {{ transaction.status }}
-                            </span>
-                        </td>
-                        <td>{{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="card" id="settings">
-            <div class="card-header">
-                <h2 class="card-title">System Settings</h2>
-            </div>
-            
-            <form id="settingsForm">
-                {% for setting in settings %}
-                {% if not setting.is_secret %}
-                <div class="form-group">
-                    <label class="form-label">{{ setting.description or setting.setting_key }}</label>
-                    <input type="text" class="form-input" name="{{ setting.setting_key }}" value="{{ setting.setting_value }}">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Packages</div>
+                    <div class="stat-value">{{ stats.total_packages }}</div>
+                    <div class="stat-change positive">Active: {{ stats.active_packages }}</div>
                 </div>
-                {% endif %}
-                {% endfor %}
-                <button type="submit" class="btn btn-primary">Save Settings</button>
-            </form>
-        </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Users</div>
+                    <div class="stat-value">{{ stats.active_customers }}</div>
+                    <div class="stat-change positive">Total: {{ stats.total_customers }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-value">{{ stats.total_revenue }}</div>
+                    <div class="stat-change positive">Today: {{ stats.today_revenue }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Transactions</div>
+                    <div class="stat-value">{{ stats.total_transactions }}</div>
+                    <div class="stat-change positive">Active: {{ stats.active_transactions }}</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Packages Section -->
+        <section id="packages-section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Internet Packages</h2>
+                        <p class="card-subtitle">Manage your WiFi bundle offerings</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openPackageModal()">
+                        + Add Package
+                    </button>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Duration</th>
+                                <th>Download</th>
+                                <th>Upload</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for package in packages %}
+                            <tr>
+                                <td>
+                                    <strong>{{ package.name }}</strong>
+                                    {% if package.description %}
+                                    <br><small style="color: #a0aec0;">{{ package.description }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>${{ "%.2f"|format(package.price) }}</td>
+                                <td>{{ format_duration(package.duration_seconds) }}</td>
+                                <td>{{ package.download_rate_limit }}</td>
+                                <td>{{ package.upload_rate_limit }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ 'success' if package.is_active else 'inactive' }}">
+                                        {{ 'Active' if package.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-primary btn-sm" onclick="editPackage({{ package.id }})" title="Edit">
+                                            ✏️
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="deletePackage({{ package.id }})" title="Delete">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Payment Gateway Section -->
+        <section id="payment-gateway-section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">PayHero/Safaricom Configuration</h2>
+                        <p class="card-subtitle">Configure your M-Pesa payment gateway accounts</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openGatewayModal()">
+                        + Add Account
+                    </button>
+                </div>
+                
+                <!-- Active Account Alert -->
+                <div class="alert alert-success" id="activeGatewayAlert" style="display: none;">
+                    <span>✓</span>
+                    <div>
+                        <strong>Active Payment Gateway</strong>
+                        <div id="activeGatewayInfo">Loading...</div>
+                    </div>
+                </div>
+                
+                <!-- Gateway Accounts Table -->
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Shortcode</th>
+                                <th>Environment</th>
+                                <th>Status</th>
+                                <th>Last Tested</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gatewayAccountsBody">
+                            <!-- Dynamic content loaded via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Gateway Settings -->
+                <div style="margin-top: 32px;">
+                    <h3 style="margin-bottom: 16px; color: #2d3748; font-size: 18px;">Gateway Settings</h3>
+                    <form id="gatewayConfigForm">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">API Base URL</label>
+                                <input type="url" class="form-input" name="payhero_api_base_url" 
+                                       placeholder="https://api.payhero.co.ke" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Callback URL</label>
+                                <input type="url" class="form-input" name="payhero_callback_url" 
+                                       placeholder="https://your-backend.com/payment/callback" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">API Timeout (seconds)</label>
+                                <input type="number" class="form-input" name="payhero_timeout" 
+                                       placeholder="30" min="5" max="120" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Retry Attempts</label>
+                                <input type="number" class="form-input" name="payhero_retry_attempts" 
+                                       placeholder="3" min="1" max="10" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+                
+                <!-- Recent Gateway Transactions -->
+                <div style="margin-top: 32px;">
+                    <h3 style="margin-bottom: 16px; color: #2d3748; font-size: 18px;">Recent Gateway Transactions</h3>
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gatewayLogsBody">
+                                <!-- Dynamic content loaded via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Transactions Section -->
+        <section id="transactions-section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Recent Transactions</h2>
+                        <p class="card-subtitle">Monitor customer payment activity</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <select class="form-select" id="transactionStatusFilter" style="width: auto;" onchange="filterTransactions()">
+                            <option value="">All Statuses</option>
+                            <option value="SUCCESS">Successful</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="FAILED">Failed</option>
+                            <option value="EXPIRED">Expired</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Phone Number</th>
+                                <th>Amount</th>
+                                <th>MAC Address</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>
+                                    <code style="background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
+                                        {{ transaction.transaction_id[:8] }}...
+                                    </code>
+                                </td>
+                                <td>{{ transaction.phone_number }}</td>
+                                <td><strong>${{ "%.2f"|format(transaction.amount) }}</strong></td>
+                                <td>
+                                    <code style="background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
+                                        {{ transaction.mac_address }}
+                                    </code>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ transaction.status|lower }}">
+                                        {{ transaction.status }}
+                                    </span>
+                                </td>
+                                <td>{{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Settings Section -->
+        <section id="settings-section" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">System Settings</h2>
+                        <p class="card-subtitle">Configure your WiFi system preferences</p>
+                    </div>
+                </div>
+                
+                <form id="settingsForm">
+                    {% for setting in settings %}
+                    {% if not setting.is_secret %}
+                    <div class="form-group">
+                        <label class="form-label">{{ setting.description or setting.setting_key }}</label>
+                        <input type="text" class="form-input" name="{{ setting.setting_key }}" 
+                               value="{{ setting.setting_value }}" required>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+            </div>
+        </section>
     </div>
     
     <!-- Package Modal -->
     <div class="modal" id="packageModal">
         <div class="modal-content">
-            <h2 class="card-title" id="modalTitle">Add Package</h2>
+            <div class="modal-header">
+                <h2 class="modal-title" id="packageModalTitle">Add Package</h2>
+                <button class="modal-close" onclick="closePackageModal()">✕</button>
+            </div>
             <form id="packageForm">
                 <input type="hidden" id="packageId" value="">
+                
                 <div class="form-group">
-                    <label class="form-label">Package Name</label>
-                    <input type="text" class="form-input" id="packageName" required>
+                    <label class="form-label">Package Name *</label>
+                    <input type="text" class="form-input" id="packageName" required 
+                           placeholder="e.g., Daily Pass">
                 </div>
+                
                 <div class="form-group">
                     <label class="form-label">Description</label>
-                    <textarea class="form-input" id="packageDescription" rows="3"></textarea>
+                    <textarea class="form-textarea" id="packageDescription" rows="3" 
+                              placeholder="Describe the package benefits..."></textarea>
                 </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Price ($) *</label>
+                        <input type="number" class="form-input" id="packagePrice" 
+                               step="0.01" min="0.01" required placeholder="e.g., 3.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Duration (seconds) *</label>
+                        <input type="number" class="form-input" id="packageDuration" 
+                               min="60" required placeholder="e.g., 86400">
+                        <div class="form-hint">3600 = 1 hour, 86400 = 1 day</div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Download Rate Limit *</label>
+                        <input type="text" class="form-input" id="packageDownload" 
+                               placeholder="e.g., 5M" pattern="^\d+[KMG]$" required>
+                        <div class="form-hint">Format: number + K/M/G (e.g., 5M)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Upload Rate Limit *</label>
+                        <input type="text" class="form-input" id="packageUpload" 
+                               placeholder="e.g., 2M" pattern="^\d+[KMG]$" required>
+                        <div class="form-hint">Format: number + K/M/G (e.g., 2M)</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closePackageModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Package</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Payment Gateway Account Modal -->
+    <div class="modal" id="gatewayModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="gatewayModalTitle">Add PayHero Account</h2>
+                <button class="modal-close" onclick="closeGatewayModal()">✕</button>
+            </div>
+            <form id="gatewayForm">
+                <input type="hidden" id="gatewayAccountId" value="">
+                
                 <div class="form-group">
-                    <label class="form-label">Price ($)</label>
-                    <input type="number" class="form-input" id="packagePrice" step="0.01" min="0" required>
+                    <label class="form-label">Account Name *</label>
+                    <input type="text" class="form-input" id="gatewayAccountName" 
+                           placeholder="e.g., Main Business Account" required>
                 </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">API Key *</label>
+                        <input type="text" class="form-input" id="gatewayApiKey" 
+                               placeholder="Enter API Key" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">API Secret *</label>
+                        <input type="password" class="form-input" id="gatewayApiSecret" 
+                               placeholder="Enter API Secret" required>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Shortcode</label>
+                        <input type="text" class="form-input" id="gatewayShortcode" 
+                               placeholder="e.g., 174379">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Account Number</label>
+                        <input type="text" class="form-input" id="gatewayAccountNumber" 
+                               placeholder="e.g., 1234567890">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Business Number</label>
+                        <input type="text" class="form-input" id="gatewayBusinessNumber" 
+                               placeholder="e.g., 0712345678">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Passkey</label>
+                        <input type="password" class="form-input" id="gatewayPasskey" 
+                               placeholder="Enter Passkey">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Environment</label>
+                        <select class="form-select" id="gatewayEnvironment">
+                            <option value="sandbox">Sandbox (Testing)</option>
+                            <option value="production">Production (Live)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Priority</label>
+                        <input type="number" class="form-input" id="gatewayPriority" 
+                               value="0" min="0" max="100">
+                        <div class="form-hint">Higher priority = preferred account</div>
+                    </div>
+                </div>
+                
                 <div class="form-group">
-                    <label class="form-label">Duration (seconds)</label>
-                    <input type="number" class="form-input" id="packageDuration" min="60" required>
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="gatewayIsActive">
+                        <span>Set as Active Account</span>
+                    </label>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Download Rate Limit</label>
-                    <input type="text" class="form-input" id="packageDownload" placeholder="e.g., 5M" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Upload Rate Limit</label>
-                    <input type="text" class="form-input" id="packageUpload" placeholder="e.g., 2M" required>
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn" onclick="closePackageModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeGatewayModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Account</button>
                 </div>
             </form>
         </div>
     </div>
     
     <script>
-        // Modal functions
+        // ============================================================================
+        // Navigation Functions
+        // ============================================================================
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        function navigateTo(section) {
+            // Hide all sections
+            const sections = [
+                'dashboard-section',
+                'packages-section',
+                'payment-gateway-section',
+                'transactions-section',
+                'settings-section'
+            ];
+            
+            sections.forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            // Show selected section
+            document.getElementById(section + '-section').style.display = 'block';
+            
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            event.target.closest('.nav-link').classList.add('active');
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+            
+            // Load data for specific sections
+            if (section === 'payment-gateway') {
+                loadPaymentGatewayAccounts();
+                loadPaymentGatewayConfigs();
+                loadPaymentGatewayLogs();
+            }
+        }
+        
+        // ============================================================================
+        // Package Management Functions
+        // ============================================================================
+        
         function openPackageModal(packageData = null) {
             const modal = document.getElementById('packageModal');
             modal.classList.add('open');
             
             if (packageData) {
-                document.getElementById('modalTitle').textContent = 'Edit Package';
+                document.getElementById('packageModalTitle').textContent = 'Edit Package';
                 document.getElementById('packageId').value = packageData.id;
                 document.getElementById('packageName').value = packageData.name;
                 document.getElementById('packageDescription').value = packageData.description || '';
@@ -475,8 +1239,9 @@
                 document.getElementById('packageDownload').value = packageData.download_rate_limit;
                 document.getElementById('packageUpload').value = packageData.upload_rate_limit;
             } else {
-                document.getElementById('modalTitle').textContent = 'Add Package';
+                document.getElementById('packageModalTitle').textContent = 'Add Package';
                 document.getElementById('packageForm').reset();
+                document.getElementById('packageId').value = '';
             }
         }
         
@@ -490,13 +1255,29 @@
             
             const packageId = document.getElementById('packageId').value;
             const formData = {
-                name: document.getElementById('packageName').value,
-                description: document.getElementById('packageDescription').value,
+                name: document.getElementById('packageName').value.trim(),
+                description: document.getElementById('packageDescription').value.trim(),
                 price: parseFloat(document.getElementById('packagePrice').value),
                 duration_seconds: parseInt(document.getElementById('packageDuration').value),
-                download_rate_limit: document.getElementById('packageDownload').value,
-                upload_rate_limit: document.getElementById('packageUpload').value,
+                download_rate_limit: document.getElementById('packageDownload').value.trim().toUpperCase(),
+                upload_rate_limit: document.getElementById('packageUpload').value.trim().toUpperCase(),
             };
+            
+            // Validate rate limits
+            const ratePattern = /^\d+[KMG]$/;
+            if (!ratePattern.test(formData.download_rate_limit)) {
+                alert('Download rate must be in format: number + K/M/G (e.g., 5M)');
+                return;
+            }
+            if (!ratePattern.test(formData.upload_rate_limit)) {
+                alert('Upload rate must be in format: number + K/M/G (e.g., 2M)');
+                return;
+            }
+            
+            // Disable submit button to prevent double submission
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Saving...';
             
             try {
                 const url = packageId ? `/admin/api/packages/${packageId}` : '/admin/api/packages';
@@ -510,15 +1291,20 @@
                     body: JSON.stringify(formData),
                 });
                 
-                if (response.ok) {
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
                     alert('Package saved successfully!');
                     location.reload();
                 } else {
-                    alert('Error saving package');
+                    alert(data.detail || 'Error saving package');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error saving package');
+                alert('Error saving package. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Package';
             }
         });
         
@@ -526,37 +1312,479 @@
         async function editPackage(packageId) {
             try {
                 const response = await fetch(`/admin/api/packages/${packageId}`);
-                if (response.ok) {
-                    const data = await response.json();
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
                     openPackageModal(data.package);
+                } else {
+                    alert('Error loading package details');
                 }
             } catch (error) {
                 console.error('Error:', error);
+                alert('Error loading package details');
             }
         }
         
         // Delete package
         async function deletePackage(packageId) {
-            if (confirm('Are you sure you want to delete this package?')) {
-                try {
-                    const response = await fetch(`/admin/api/packages/${packageId}`, {
-                        method: 'DELETE',
-                    });
-                    
-                    if (response.ok) {
-                        alert('Package deleted successfully!');
-                        location.reload();
-                    } else {
-                        alert('Error deleting package');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error deleting package');
+            if (!confirm('Are you sure you want to deactivate this package? It will no longer be available for purchase.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/admin/api/packages/${packageId}`, {
+                    method: 'DELETE',
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    alert('Package deactivated successfully!');
+                    location.reload();
+                } else {
+                    alert(data.detail || 'Error deactivating package');
                 }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error deactivating package');
             }
         }
         
-        // Settings form submission
+        // ============================================================================
+        // Payment Gateway Management Functions
+        // ============================================================================
+        
+        let paymentGatewayAccounts = [];
+        
+        // Load payment gateway accounts
+        async function loadPaymentGatewayAccounts() {
+            try {
+                const response = await fetch('/admin/payment-gateway/accounts');
+                const data = await response.json();
+                
+                if (data.success) {
+                    paymentGatewayAccounts = data.accounts;
+                    renderGatewayAccounts();
+                    renderActiveGatewayInfo();
+                }
+            } catch (error) {
+                console.error('Error loading payment gateway accounts:', error);
+            }
+        }
+        
+        // Render gateway accounts table
+        function renderGatewayAccounts() {
+            const tbody = document.getElementById('gatewayAccountsBody');
+            
+            if (paymentGatewayAccounts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #a0aec0;">
+                            No payment gateway accounts configured. Click "Add Account" to get started.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = paymentGatewayAccounts.map(account => `
+                <tr>
+                    <td>
+                        <strong>${account.account_name}</strong>
+                        ${account.is_active ? '<span class="status-badge status-success" style="margin-left: 8px;">Active</span>' : ''}
+                    </td>
+                    <td>${account.shortcode || account.account_number || '-'}</td>
+                    <td>
+                        <span class="status-badge status-${account.environment === 'production' ? 'success' : 'sandbox'}">
+                            ${account.environment}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${account.last_test_status === 'SUCCESS' ? 'success' : 'failed'}">
+                            ${account.last_test_status || 'Not Tested'}
+                        </span>
+                    </td>
+                    <td>${account.last_tested_at ? new Date(account.last_tested_at).toLocaleString() : '-'}</td>
+                    <td>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="btn btn-success btn-sm" onclick="testGatewayAccount(${account.id})" title="Test Connection">
+                                🔌
+                            </button>
+                            ${account.is_active ? 
+                                `<button class="btn btn-warning btn-sm" onclick="toggleGatewayAccount(${account.id})" title="Deactivate">⏸️</button>` :
+                                `<button class="btn btn-primary btn-sm" onclick="toggleGatewayAccount(${account.id})" title="Activate">▶️</button>`
+                            }
+                            <button class="btn btn-primary btn-sm" onclick="editGatewayAccount(${account.id})" title="Edit">
+                                ✏️
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteGatewayAccount(${account.id})" title="Delete">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Render active gateway info
+        function renderActiveGatewayInfo() {
+            const activeAccount = paymentGatewayAccounts.find(a => a.is_active);
+            const alertDiv = document.getElementById('activeGatewayAlert');
+            const infoDiv = document.getElementById('activeGatewayInfo');
+            
+            if (activeAccount) {
+                alertDiv.style.display = 'flex';
+                infoDiv.innerHTML = `
+                    <strong>${activeAccount.account_name}</strong> | 
+                    Shortcode: ${activeAccount.shortcode || activeAccount.account_number || 'N/A'} | 
+                    Environment: ${activeAccount.environment} | 
+                    Priority: ${activeAccount.priority}
+                `;
+            } else {
+                alertDiv.style.display = 'none';
+            }
+        }
+        
+        // Open gateway modal for adding/editing
+        function openGatewayModal(accountData = null) {
+            const modal = document.getElementById('gatewayModal');
+            modal.classList.add('open');
+            
+            if (accountData) {
+                document.getElementById('gatewayModalTitle').textContent = 'Edit PayHero Account';
+                document.getElementById('gatewayAccountId').value = accountData.id;
+                document.getElementById('gatewayAccountName').value = accountData.account_name;
+                document.getElementById('gatewayApiKey').value = '';
+                document.getElementById('gatewayApiSecret').value = '';
+                document.getElementById('gatewayShortcode').value = accountData.shortcode || '';
+                document.getElementById('gatewayAccountNumber').value = accountData.account_number || '';
+                document.getElementById('gatewayBusinessNumber').value = accountData.business_number || '';
+                document.getElementById('gatewayPasskey').value = '';
+                document.getElementById('gatewayEnvironment').value = accountData.environment;
+                document.getElementById('gatewayPriority').value = accountData.priority || 0;
+                document.getElementById('gatewayIsActive').checked = accountData.is_active;
+                
+                // Show hints about secrets
+                document.getElementById('gatewayApiKey').placeholder = 'Leave blank to keep existing';
+                document.getElementById('gatewayApiSecret').placeholder = 'Leave blank to keep existing';
+                document.getElementById('gatewayPasskey').placeholder = 'Leave blank to keep existing';
+                
+                // Make API key/secret optional for editing
+                document.getElementById('gatewayApiKey').required = false;
+                document.getElementById('gatewayApiSecret').required = false;
+            } else {
+                document.getElementById('gatewayModalTitle').textContent = 'Add PayHero Account';
+                document.getElementById('gatewayForm').reset();
+                document.getElementById('gatewayAccountId').value = '';
+                document.getElementById('gatewayApiKey').placeholder = 'Enter API Key';
+                document.getElementById('gatewayApiSecret').placeholder = 'Enter API Secret';
+                document.getElementById('gatewayPasskey').placeholder = 'Enter Passkey';
+                document.getElementById('gatewayEnvironment').value = 'sandbox';
+                document.getElementById('gatewayPriority').value = 0;
+                
+                // Make API key/secret required for creating
+                document.getElementById('gatewayApiKey').required = true;
+                document.getElementById('gatewayApiSecret').required = true;
+            }
+        }
+        
+        // Close gateway modal
+        function closeGatewayModal() {
+            document.getElementById('gatewayModal').classList.remove('open');
+        }
+        
+        // Edit gateway account
+        function editGatewayAccount(accountId) {
+            const account = paymentGatewayAccounts.find(a => a.id === accountId);
+            if (account) {
+                openGatewayModal(account);
+            }
+        }
+        
+        // Test gateway account connection
+        async function testGatewayAccount(accountId) {
+            if (!confirm('Test connection to this payment gateway account?')) {
+                return;
+            }
+            
+            const account = paymentGatewayAccounts.find(a => a.id === accountId);
+            alert(`Testing connection to ${account.account_name}... This may take a moment.`);
+            
+            try {
+                const response = await fetch(`/admin/payment-gateway/accounts/${accountId}/test`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Connection test successful!\n\n${data.message || ''}`);
+                    loadPaymentGatewayAccounts();
+                } else {
+                    alert(`Connection test failed: ${data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error testing connection:', error);
+                alert('Error testing connection. Please try again.');
+            }
+        }
+        
+        // Toggle gateway account active status
+        async function toggleGatewayAccount(accountId) {
+            const account = paymentGatewayAccounts.find(a => a.id === accountId);
+            const action = account.is_active ? 'deactivate' : 'activate';
+            
+            if (!confirm(`Are you sure you want to ${action} "${account.account_name}"?`)) {
+                return;
+            }
+            
+            try {
+                let url, method, body;
+                
+                if (account.is_active) {
+                    url = `/admin/payment-gateway/accounts/${accountId}/deactivate`;
+                    method = 'POST';
+                } else {
+                    url = `/admin/payment-gateway/accounts/${accountId}/activate`;
+                    method = 'POST';
+                }
+                
+                const response = await fetch(url, {
+                    method: method,
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Account ${action}d successfully!`);
+                    loadPaymentGatewayAccounts();
+                } else {
+                    alert(`Failed to ${action} account: ${data.detail || data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error(`Error ${action}ing account:`, error);
+                alert(`Error ${action}ing account. Please try again.`);
+            }
+        }
+        
+        // Delete gateway account
+        async function deleteGatewayAccount(accountId) {
+            const account = paymentGatewayAccounts.find(a => a.id === accountId);
+            
+            if (!confirm(`Are you sure you want to delete "${account.account_name}"? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/admin/payment-gateway/accounts/${accountId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Account deleted successfully!');
+                    loadPaymentGatewayAccounts();
+                } else {
+                    alert(`Failed to delete account: ${data.detail || data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Error deleting account. Please try again.');
+            }
+        }
+        
+        // Gateway form submission
+        document.getElementById('gatewayForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const accountId = document.getElementById('gatewayAccountId').value;
+            const formData = {};
+            
+            // Add required fields
+            formData.account_name = document.getElementById('gatewayAccountName').value.trim();
+            
+            // Add optional fields (only if they have values)
+            const apiKey = document.getElementById('gatewayApiKey').value.trim();
+            const apiSecret = document.getElementById('gatewayApiSecret').value.trim();
+            const shortcode = document.getElementById('gatewayShortcode').value.trim();
+            const accountNumber = document.getElementById('gatewayAccountNumber').value.trim();
+            const businessNumber = document.getElementById('gatewayBusinessNumber').value.trim();
+            const passkey = document.getElementById('gatewayPasskey').value.trim();
+            
+            if (apiKey) formData.api_key = apiKey;
+            if (apiSecret) formData.api_secret = apiSecret;
+            if (shortcode) formData.shortcode = shortcode;
+            if (accountNumber) formData.account_number = accountNumber;
+            if (businessNumber) formData.business_number = businessNumber;
+            if (passkey) formData.passkey = passkey;
+            
+            formData.environment = document.getElementById('gatewayEnvironment').value;
+            formData.priority = parseInt(document.getElementById('gatewayPriority').value) || 0;
+            formData.is_active = document.getElementById('gatewayIsActive').checked;
+            
+            // Validate required fields for new accounts
+            if (!accountId && (!apiKey || !apiSecret)) {
+                alert('API Key and API Secret are required for new accounts');
+                return;
+            }
+            
+            // Disable submit button
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Saving...';
+            
+            try {
+                const url = accountId 
+                    ? `/admin/payment-gateway/accounts/${accountId}`
+                    : '/admin/payment-gateway/accounts';
+                const method = accountId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Payment gateway account ${accountId ? 'updated' : 'created'} successfully!`);
+                    closeGatewayModal();
+                    loadPaymentGatewayAccounts();
+                } else {
+                    alert(`Error: ${data.detail || data.message || 'Failed to save account'}`);
+                }
+            } catch (error) {
+                console.error('Error saving gateway account:', error);
+                alert('Error saving gateway account. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Account';
+            }
+        });
+        
+        // Load payment gateway configs
+        async function loadPaymentGatewayConfigs() {
+            try {
+                const response = await fetch('/admin/payment-gateway/configs');
+                const data = await response.json();
+                
+                if (data.success) {
+                    data.configs.forEach(config => {
+                        const input = document.querySelector(`[name="${config.config_key}"]`);
+                        if (input) {
+                            input.value = config.config_value;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading gateway configs:', error);
+            }
+        }
+        
+        // Gateway config form submission
+        document.getElementById('gatewayConfigForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const configs = [];
+            
+            formData.forEach((value, key) => {
+                configs.push({
+                    config_key: key,
+                    config_value: value,
+                });
+            });
+            
+            try {
+                const response = await fetch('/admin/payment-gateway/configs/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(configs),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Payment gateway settings saved successfully! Updated ${data.updated_count} configurations.`);
+                } else {
+                    alert('Error saving payment gateway settings');
+                }
+            } catch (error) {
+                console.error('Error saving gateway configs:', error);
+                alert('Error saving payment gateway settings. Please try again.');
+            }
+        });
+        
+        // Load payment gateway logs
+        async function loadPaymentGatewayLogs() {
+            try {
+                const response = await fetch('/admin/payment-gateway/logs?limit=10');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const tbody = document.getElementById('gatewayLogsBody');
+                    
+                    if (data.logs.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="3" style="text-align: center; padding: 20px; color: #a0aec0;">
+                                    No transactions logged yet
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    tbody.innerHTML = data.logs.map(log => `
+                        <tr>
+                            <td>
+                                <code style="background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
+                                    ${log.transaction_id ? log.transaction_id.substring(0, 8) + '...' : '-'}
+                                </code>
+                            </td>
+                            <td>
+                                <span class="status-badge status-${log.status ? log.status.toLowerCase() : 'pending'}">
+                                    ${log.status || 'Unknown'}
+                                </span>
+                            </td>
+                            <td>${new Date(log.created_at).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading gateway logs:', error);
+            }
+        }
+        
+        // ============================================================================
+        // Transaction Functions
+        // ============================================================================
+        
+        async function filterTransactions() {
+            const status = document.getElementById('transactionStatusFilter').value;
+            
+            try {
+                const url = status ? `/admin/api/transactions?status=${status}` : '/admin/api/transactions';
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update table with filtered transactions
+                    // This would require re-rendering the table with JavaScript
+                    // For simplicity, we'll reload the page with a query parameter
+                    window.location.href = status ? `?transaction_status=${status}` : window.location.pathname;
+                }
+            } catch (error) {
+                console.error('Error filtering transactions:', error);
+            }
+        }
+        
+        // ============================================================================
+        // Settings Functions
+        // ============================================================================
+        
         document.getElementById('settingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -588,7 +1816,37 @@
                 alert('Settings saved successfully!');
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error saving settings');
+                alert('Error saving settings. Please try again.');
+            }
+        });
+        
+        // ============================================================================
+        // Initialization
+        // ============================================================================
+        
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show dashboard by default
+            document.getElementById('dashboard-section').style.display = 'block';
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const sidebar = document.getElementById('sidebar');
+                const menuBtn = document.querySelector('.mobile-menu-btn');
+                
+                if (window.innerWidth <= 768 && 
+                    sidebar.classList.contains('open') && 
+                    !sidebar.contains(event.target) && 
+                    !menuBtn.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+        
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('open');
             }
         });
     </script>

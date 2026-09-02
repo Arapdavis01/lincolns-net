@@ -3,7 +3,7 @@ Lincoln's net - Payment Routes
 Payment webhook callback handling
 """
 
-from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Request, HTTPException, BackgroundTasks, Depends  # ← ADD Depends HERE
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -75,7 +75,8 @@ async def payment_callback(
             # Calculate expiration time
             package_result = await db.execute(
                 select(InternetPackage).where(
-                    InternetPackage.id == transaction.package_id                )
+                    InternetPackage.id == transaction.package_id
+                )
             )
             package = package_result.scalar_one_or_none()
             

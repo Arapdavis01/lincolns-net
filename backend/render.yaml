@@ -2,10 +2,11 @@ services:
   - type: web
     name: lincolns-net-backend
     env: python
-    region: frankfurt  # Choose closest to Kenya
-    plan: free  # Start with free, upgrade as needed
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers 4
+    pythonVersion: 3.11.0  # Force Python 3.11
+    region: frankfurt
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
@@ -28,6 +29,4 @@ services:
         value: 192.168.88.1
       - key: PAYMENT_WEBHOOK_SECRET
         generateValue: true
-      - key: PAYMENT_GATEWAY_URL
-        value: https://api.payhero.co.ke
     autoDeploy: true

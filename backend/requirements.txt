@@ -10,3 +10,4 @@ aiofiles==23.2.1
 httpx==0.25.1
 python-dotenv==1.0.0
 phonenumbers==8.13.26
+gunicorn==21.2.0

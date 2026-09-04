@@ -1,7 +1,7 @@
 """
 Lincoln's net - Application Models
 Database models for core application
-Includes InternetPackage, BillingTransaction, and SystemSetting
+Includes InternetPackage, BillingTransaction, SystemSetting, and TVDevice
 """
 
 from sqlalchemy import (
@@ -35,8 +35,14 @@ class InternetPackage(Base):
     
     # Duration and Bandwidth
     duration_seconds = Column(Integer, nullable=False)
-    download_rate_limit = Column(String(50), default='1M', nullable=False)
-    upload_rate_limit = Column(String(50), default='1M', nullable=False)
+    download_rate_limit = Column(String(50), default='5M', nullable=False)
+    upload_rate_limit = Column(String(50), default='2M', nullable=False)
+    
+    # NEW: Maximum users allowed (1 = single device, 2 = 2 devices, etc.)
+    max_users = Column(Integer, default=1, nullable=False)
+    
+    # NEW: Whether this package supports TV connections
+    supports_tv = Column(Boolean, default=False, nullable=False)
     
     # Status
     is_active = Column(Boolean, default=True, nullable=False, index=True)
@@ -47,11 +53,13 @@ class InternetPackage(Base):
     
     # Relationships
     transactions = relationship("BillingTransaction", back_populates="package")
+    tv_devices = relationship("TVDevice", back_populates="package")
     
     # Constraints
     __table_args__ = (
         CheckConstraint('price > 0', name='check_price_positive'),
         CheckConstraint('duration_seconds > 0', name='check_duration_positive'),
+        CheckConstraint('max_users >= 1', name='check_max_users_positive'),
         Index('idx_internet_packages_active', 'is_active'),
         Index('idx_internet_packages_price', 'price'),
     )
@@ -76,6 +84,8 @@ class InternetPackage(Base):
             'duration_display': self.format_duration(self.duration_seconds),
             'download_rate_limit': self.download_rate_limit,
             'upload_rate_limit': self.upload_rate_limit,
+            'max_users': self.max_users if self.max_users else 1,
+            'supports_tv': self.supports_tv if self.supports_tv is not None else False,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
@@ -108,7 +118,7 @@ class InternetPackage(Base):
     
     def __repr__(self) -> str:
         """String representation."""
-        return f"<InternetPackage(id={self.id}, name='{self.name}', price=KES {self.price})>"
+        return f"<InternetPackage(id={self.id}, name='{self.name}', price=KES {self.price}, max_users={self.max_users})>"
 
 
 class BillingTransaction(Base):
@@ -132,6 +142,9 @@ class BillingTransaction(Base):
     phone_number = Column(String(20), nullable=False, index=True)
     amount = Column(DECIMAL(10, 2), nullable=False)
     mac_address = Column(String(17), nullable=False, index=True)
+    
+    # NEW: Device type (phone, tablet, tv)
+    device_type = Column(String(20), default='phone', nullable=False)
     
     # Foreign Key
     package_id = Column(
@@ -165,6 +178,10 @@ class BillingTransaction(Base):
             "status IN ('PENDING', 'SUCCESS', 'FAILED', 'EXPIRED')",
             name='check_transaction_status_valid'
         ),
+        CheckConstraint(
+            "device_type IN ('phone', 'tablet', 'tv', 'laptop')",
+            name='check_device_type_valid'
+        ),
         Index('idx_billing_transactions_mac', 'mac_address'),
         Index('idx_billing_transactions_status', 'status'),
         Index('idx_billing_transactions_created', 'created_at'),
@@ -173,6 +190,7 @@ class BillingTransaction(Base):
     
     # Valid statuses
     VALID_STATUSES = ['PENDING', 'SUCCESS', 'FAILED', 'EXPIRED']
+    VALID_DEVICE_TYPES = ['phone', 'tablet', 'tv', 'laptop']
     
     def to_dict(self, include_package: bool = False) -> Dict[str, Any]:
         """
@@ -191,6 +209,7 @@ class BillingTransaction(Base):
             'amount': float(self.amount) if self.amount else 0,
             'amount_display': f"KES {float(self.amount):,.2f}" if self.amount else "KES 0.00",
             'mac_address': self.mac_address,
+            'device_type': self.device_type,
             'package_id': self.package_id,
             'status': self.status,
             'payment_reference': self.payment_reference,
@@ -241,6 +260,63 @@ class BillingTransaction(Base):
         return f"<BillingTransaction(id={self.id}, phone='{self.phone_number}', amount=KES {self.amount}, status='{self.status}')>"
 
 
+class TVDevice(Base):
+    """
+    TV Device model.
+    Represents Smart TVs connected to the network.
+    """
+    __tablename__ = 'tv_devices'
+    
+    # Primary Key
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Device Information
+    mac_address = Column(String(17), unique=True, nullable=False, index=True)
+    device_name = Column(String(255), nullable=True)
+    
+    # Foreign Key
+    package_id = Column(
+        Integer, 
+        ForeignKey('internet_packages.id', ondelete='SET NULL'),
+        nullable=True,
+        index=True
+    )
+    
+    # Status
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    last_connected_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    package = relationship("InternetPackage", back_populates="tv_devices")
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            'id': self.id,
+            'mac_address': self.mac_address,
+            'device_name': self.device_name,
+            'package_id': self.package_id,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+            'last_connected_at': self.last_connected_at.isoformat() if self.last_connected_at else None,
+            'is_expired': self.is_expired() if self.expires_at else False,
+        }
+    
+    def is_expired(self) -> bool:
+        """Check if TV session has expired."""
+        if not self.expires_at:
+            return False
+        return datetime.now(timezone.utc) > self.expires_at
+    
+    def __repr__(self) -> str:
+        return f"<TVDevice(id={self.id}, mac='{self.mac_address}', active={self.is_active})>"
+
+
 class SystemSetting(Base):
     """
     System setting model.
@@ -271,7 +347,6 @@ class SystemSetting(Base):
         Returns:
             Dictionary representation of the setting
         """
-        # Don't expose secret values unless explicitly requested
         if self.is_secret and not include_secret:
             return {
                 'id': self.id,
@@ -315,30 +390,38 @@ def create_default_packages() -> list:
             duration_seconds=3600,
             download_rate_limit='5M',
             upload_rate_limit='2M',
+            max_users=1,
+            supports_tv=False,
         ),
         InternetPackage(
             name='Daily Pass',
             description='24 hours of unlimited internet access',
             price=300.00,
             duration_seconds=86400,
-            download_rate_limit='10M',
-            upload_rate_limit='5M',
+            download_rate_limit='5M',
+            upload_rate_limit='2M',
+            max_users=2,
+            supports_tv=False,
         ),
         InternetPackage(
             name='Weekly Pass',
             description='7 days of premium internet access',
             price=1500.00,
             duration_seconds=604800,
-            download_rate_limit='20M',
-            upload_rate_limit='10M',
+            download_rate_limit='5M',
+            upload_rate_limit='2M',
+            max_users=3,
+            supports_tv=True,
         ),
         InternetPackage(
             name='Monthly Pass',
             description='30 days of unlimited internet access',
             price=5000.00,
             duration_seconds=2592000,
-            download_rate_limit='50M',
-            upload_rate_limit='25M',
+            download_rate_limit='7M',
+            upload_rate_limit='3M',
+            max_users=3,
+            supports_tv=True,
         ),
     ]
 
@@ -380,6 +463,12 @@ def create_default_settings() -> list:
             is_secret=False,
         ),
         SystemSetting(
+            setting_key='tv_support_enabled',
+            setting_value='true',
+            description='Enable TV Support',
+            is_secret=False,
+        ),
+        SystemSetting(
             setting_key='radius_secret',
             setting_value='change-this-secret-key',
             description='RADIUS Server Secret',
@@ -395,6 +484,7 @@ def create_default_settings() -> list:
 __all__ = [
     'InternetPackage',
     'BillingTransaction',
+    'TVDevice',
     'SystemSetting',
     'create_default_packages',
     'create_default_settings',

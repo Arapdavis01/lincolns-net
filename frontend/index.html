@@ -42,7 +42,7 @@
             </div>
             
             <!-- ============================================================
-            PRICING GRID (2-Column Layout)
+            PRICING GRID (2-Column Layout - Always)
             ============================================================ -->
             <div class="pricing-grid" id="pricingGrid">
                 <!-- Loading State -->
@@ -60,47 +60,52 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- ============================================================
-            PHONE SECTION (Shown after package selection)
-            ============================================================ -->
-            <div class="phone-section" id="phoneSection" style="display: none;">
-                <div class="phone-card">
-                    <h3><i class="fas fa-mobile-alt"></i> Enter Your Phone Number</h3>
-                    
-                    <div class="selected-package-info">
-                        <span>Selected: </span>
-                        <strong id="selectedPackageName"></strong> - 
-                        <strong id="selectedPackagePrice"></strong>
-                    </div>
-                    
-                    <div class="input-group">
-                        <span class="input-icon">
-                            <i class="fas fa-phone"></i>
-                        </span>
-                        <input 
-                            type="tel" 
-                            id="phoneNumber" 
-                            class="form-input" 
-                            placeholder="e.g., 0712345678" 
-                            maxlength="10"
-                            pattern="[0-9]{10}"
-                            inputmode="numeric"
-                            required
-                        >
-                    </div>
-                    
-                    <button class="btn-connect" onclick="connectNow()" id="connectButton">
-                        <i class="fas fa-plug"></i> Connect Now
-                    </button>
-                    
-                    <button class="btn-cancel" onclick="cancelSelection()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                </div>
-            </div>
         </div>
     </main>
+    
+    <!-- ====================================================================
+    PACKAGE SELECTION MODAL (Shows on card click)
+    ==================================================================== -->
+    <div class="modal" id="packageSelectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-shopping-cart"></i> Confirm Package</h2>
+                <button class="modal-close" onclick="closeModal('packageSelectionModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Selected Package Details -->
+            <div id="selectedPackageDetails" style="margin-bottom: 20px;">
+                <!-- Filled dynamically -->
+            </div>
+            
+            <!-- Phone Number Input -->
+            <div class="form-group">
+                <label class="form-label" for="modalPhoneNumber">
+                    <i class="fas fa-mobile-alt"></i> Phone Number (M-Pesa)
+                </label>
+                <div class="input-group">
+                    <span class="input-icon"><i class="fas fa-phone"></i></span>
+                    <input 
+                        type="tel" 
+                        id="modalPhoneNumber" 
+                        class="form-input" 
+                        placeholder="e.g., 0712345678" 
+                        maxlength="10"
+                        pattern="[0-9]{10}"
+                        inputmode="numeric"
+                        required
+                    >
+                </div>
+            </div>
+            
+            <!-- Connect Button -->
+            <button class="btn btn-primary btn-block" onclick="confirmPackage()" id="modalConnectButton">
+                <i class="fas fa-plug"></i> Connect Now
+            </button>
+        </div>
+    </div>
     
     <!-- ====================================================================
     BOTTOM TV BAR
@@ -187,7 +192,7 @@
         });
         
         // ================================================================
-        // LOAD PUBLIC SETTINGS (Support Phone, TV Support)
+        // LOAD PUBLIC SETTINGS
         // ================================================================
         
         async function loadPublicSettings() {
@@ -199,10 +204,8 @@
                     supportPhone = data.support_phone || '+254700000000';
                     tvSupportEnabled = data.tv_support_enabled || false;
                     
-                    // Update floating phone link
                     document.getElementById('floatingPhone').href = `tel:${supportPhone}`;
                     
-                    // Show/hide TV bar
                     if (tvSupportEnabled) {
                         document.getElementById('bottomTvBar').style.display = 'flex';
                     }
@@ -213,7 +216,7 @@
         }
         
         // ================================================================
-        // LOAD PACKAGES FROM DATABASE
+        // LOAD PACKAGES
         // ================================================================
         
         async function loadPackages() {
@@ -244,7 +247,7 @@
         }
         
         // ================================================================
-        // RENDER PACKAGES IN 2-COLUMN GRID
+        // RENDER PACKAGES
         // ================================================================
         
         function renderPackages(packages) {
@@ -279,22 +282,18 @@
                             </span>
                             ${pkg.max_users > 1 ? `
                             <span class="users-badge">
-                                <i class="fas fa-users"></i> ${pkg.max_users} users
+                                <i class="fas fa-users"></i> ${pkg.max_users}
                             </span>
-                            ` : `
-                            <span class="users-badge single">
-                                <i class="fas fa-user"></i> 1 device
-                            </span>
-                            `}
+                            ` : ''}
                             ${pkg.supports_tv ? `
                             <span class="tv-badge">
-                                <i class="fas fa-tv"></i> TV
+                                <i class="fas fa-tv"></i>
                             </span>
                             ` : ''}
                         </div>
                     </div>
                     <button class="btn-select">
-                        <i class="fas fa-mouse-pointer"></i> Click Here
+                        <i class="fas fa-mouse-pointer"></i> Select
                     </button>
                 </div>
             `).join('');
@@ -319,7 +318,81 @@
         }
         
         // ================================================================
-        // CHECK ACTIVE SESSION (Already Paid Feature)
+        // PACKAGE SELECTION - Opens Modal (NO auto-scroll)
+        // ================================================================
+        
+        function selectPackage(packageId) {
+            selectedPackageId = packageId;
+            
+            // Update selected state on cards
+            document.querySelectorAll('.pricing-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-package-id="${packageId}"]`).classList.add('selected');
+            
+            // Find package details
+            const pkg = packagesList.find(p => p.id === packageId);
+            if (pkg) {
+                // Fill modal with package details
+                document.getElementById('selectedPackageDetails').innerHTML = `
+                    <div style="text-align: center; padding: 16px; background: #f0f9ff; border-radius: 12px; border: 2px solid #38bdf8;">
+                        <h3 style="color: #1b2a4c; margin-bottom: 8px; font-size: 18px;">${pkg.name}</h3>
+                        <div style="font-size: 24px; font-weight: 700; color: #0ea5e9;">
+                            ${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}
+                        </div>
+                        <div style="font-size: 14px; color: #718096; margin-top: 8px;">
+                            <i class="fas fa-hourglass-half"></i> ${formatDuration(pkg.duration_seconds)}
+                            <span style="margin: 0 8px;">|</span>
+                            <i class="fas fa-download"></i> ${pkg.download_rate_limit}
+                            <span style="margin: 0 8px;">|</span>
+                            <i class="fas fa-upload"></i> ${pkg.upload_rate_limit}
+                        </div>
+                        ${pkg.max_users > 1 ? `
+                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">
+                            <i class="fas fa-users"></i> Supports up to ${pkg.max_users} devices
+                        </div>
+                        ` : `
+                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">
+                            <i class="fas fa-user"></i> Single device only
+                        </div>
+                        `}
+                    </div>
+                `;
+                
+                // Clear phone input
+                document.getElementById('modalPhoneNumber').value = '';
+                
+                // Open modal
+                document.getElementById('packageSelectionModal').classList.add('open');
+            }
+        }
+        
+        // ================================================================
+        // CONFIRM PACKAGE FROM MODAL
+        // ================================================================
+        
+        function confirmPackage() {
+            const phoneNumber = document.getElementById('modalPhoneNumber').value.trim();
+            
+            if (!selectedPackageId) {
+                alert('Please select a package');
+                return;
+            }
+            
+            if (!phoneNumber || phoneNumber.length < 10) {
+                alert('Please enter a valid 10-digit phone number');
+                return;
+            }
+            
+            // Close modal
+            closeModal('packageSelectionModal');
+            
+            // Proceed to payment
+            connectNow(phoneNumber);
+        }
+        
+        // ================================================================
+        // CHECK ACTIVE SESSION
         // ================================================================
         
         async function checkActiveSession() {
@@ -410,7 +483,6 @@
                 alert('Please enter your phone number');
                 return;
             }
-            // Implement phone-based check if needed
             alert('Phone number check coming soon');
         }
         
@@ -418,61 +490,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             const mac = urlParams.get('mac') || '';
             const linkLoginOnly = urlParams.get('link_login_only') || '';
-            
-            // Redirect to success page with MAC
             window.location.href = `${BACKEND_URL}/success?mac=${mac}&link_login_only=${linkLoginOnly}`;
-        }
-        
-        // ================================================================
-        // PACKAGE SELECTION
-        // ================================================================
-        
-        function selectPackage(packageId) {
-            selectedPackageId = packageId;
-            
-            // Update selected state
-            document.querySelectorAll('.pricing-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            document.querySelector(`[data-package-id="${packageId}"]`).classList.add('selected');
-            
-            // Show phone section
-            const pkg = packagesList.find(p => p.id === packageId);
-            if (pkg) {
-                document.getElementById('selectedPackageName').textContent = pkg.name;
-                document.getElementById('selectedPackagePrice').textContent = `${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}`;
-                document.getElementById('phoneSection').style.display = 'block';
-                
-                // Scroll to phone section
-                document.getElementById('phoneSection').scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-        
-        function cancelSelection() {
-            selectedPackageId = null;
-            document.querySelectorAll('.pricing-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            document.getElementById('phoneSection').style.display = 'none';
         }
         
         // ================================================================
         // CONNECT TO WIFI
         // ================================================================
         
-        async function connectNow() {
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const connectButton = document.getElementById('connectButton');
-            
-            if (!selectedPackageId) {
-                showAlert('Please select a package', 'warning');
-                return;
-            }
-            
-            if (!phoneNumber || phoneNumber.length < 10) {
-                showAlert('Please enter a valid 10-digit phone number', 'warning');
-                return;
-            }
+        async function connectNow(phoneNumber) {
+            const connectButton = document.getElementById('modalConnectButton');
             
             connectButton.disabled = true;
             connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
@@ -499,13 +525,13 @@
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    showAlert('Payment initiated! Check your phone for M-Pesa prompt.', 'success');
+                    alert('Payment initiated! Check your phone for M-Pesa prompt.');
                 } else {
-                    showAlert(data.error || 'Payment initiation failed', 'error');
+                    alert(data.error || 'Payment initiation failed');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showAlert('Error connecting to payment service', 'error');
+                alert('Error connecting to payment service');
             } finally {
                 connectButton.disabled = false;
                 connectButton.innerHTML = '<i class="fas fa-plug"></i> Connect Now';
@@ -578,25 +604,6 @@
             if (seconds < 86400) return `${Math.floor(seconds / 3600)} hrs`;
             if (seconds < 604800) return `${Math.floor(seconds / 86400)} days`;
             return `${Math.floor(seconds / 2592000)} months`;
-        }
-        
-        function showAlert(message, type = 'info') {
-            const existingAlert = document.querySelector('.portal-alert');
-            if (existingAlert) existingAlert.remove();
-            
-            const alert = document.createElement('div');
-            alert.className = `portal-alert portal-alert-${type}`;
-            alert.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
-                <span>${message}</span>
-            `;
-            
-            const phoneSection = document.getElementById('phoneSection');
-            phoneSection.parentNode.insertBefore(alert, phoneSection.nextSibling);
-            
-            setTimeout(() => {
-                if (alert.parentElement) alert.remove();
-            }, 5000);
         }
         
         function closeModal(modalId) {

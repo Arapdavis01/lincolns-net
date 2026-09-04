@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#1b2a4c">
     <title>Lincoln's net - WiFi Access</title>
     
     <!-- Font Awesome Icons -->
@@ -13,315 +13,594 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="portal-container">
-        <div class="portal-card">
-            <!-- Header -->
-            <div class="portal-header">
-                <div class="portal-logo">
+    <!-- ====================================================================
+    HEADER BAR
+    ==================================================================== -->
+    <header class="portal-header-bar">
+        <div class="header-content">
+            <div class="logo-area">
+                <div class="logo-box">
                     <i class="fas fa-wifi"></i>
                 </div>
-                <h1 class="portal-title">Lincoln's net</h1>
-                <p class="portal-subtitle">Fast, Reliable WiFi Access</p>
+                <h1>LINCOLN'S NET</h1>
+            </div>
+            <a href="#" class="paid-link" onclick="checkAlreadyPaid(event)">
+                <i class="fas fa-check-circle"></i> Already Paid? Click Here
+            </a>
+        </div>
+    </header>
+    
+    <!-- ====================================================================
+    MAIN CONTENT
+    ==================================================================== -->
+    <main class="portal-main">
+        <div class="container">
+            <!-- Page Title -->
+            <div class="page-title">
+                <h2>CHECK OUR PRICING</h2>
+                <p>Choose a plan that fits your needs</p>
             </div>
             
-            <!-- Packages -->
-            <div class="packages-list">
-                <div class="package-card" onclick="selectPackage(this, 1)">
-                    <div class="package-header">
-                        <div class="package-name">
-                            <i class="fas fa-clock"></i> Hourly Pass
-                        </div>
-                        <div class="package-price">
-                            <i class="fas fa-money-bill-wave"></i> KES 100
-                        </div>
-                    </div>
-                    <div class="package-details">
-                        <span class="package-badge">
-                            <i class="fas fa-hourglass-half"></i> 1 hour
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-download"></i> 5M
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-upload"></i> 2M
-                        </span>
-                    </div>
+            <!-- ============================================================
+            PRICING GRID (2-Column Layout)
+            ============================================================ -->
+            <div class="pricing-grid" id="pricingGrid">
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Loading packages...</p>
                 </div>
                 
-                <div class="package-card" onclick="selectPackage(this, 2)">
-                    <div class="package-header">
-                        <div class="package-name">
-                            <i class="fas fa-sun"></i> Daily Pass
-                        </div>
-                        <div class="package-price">
-                            <i class="fas fa-money-bill-wave"></i> KES 300
-                        </div>
-                    </div>
-                    <div class="package-details">
-                        <span class="package-badge">
-                            <i class="fas fa-hourglass-half"></i> 24 hours
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-download"></i> 10M
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-upload"></i> 5M
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="package-card" onclick="selectPackage(this, 3)">
-                    <div class="package-header">
-                        <div class="package-name">
-                            <i class="fas fa-calendar-week"></i> Weekly Pass
-                        </div>
-                        <div class="package-price">
-                            <i class="fas fa-money-bill-wave"></i> KES 1,500
-                        </div>
-                    </div>
-                    <div class="package-details">
-                        <span class="package-badge">
-                            <i class="fas fa-hourglass-half"></i> 7 days
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-download"></i> 20M
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-upload"></i> 10M
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="package-card" onclick="selectPackage(this, 4)">
-                    <div class="package-header">
-                        <div class="package-name">
-                            <i class="fas fa-calendar-check"></i> Monthly Pass
-                        </div>
-                        <div class="package-price">
-                            <i class="fas fa-money-bill-wave"></i> KES 5,000
-                        </div>
-                    </div>
-                    <div class="package-details">
-                        <span class="package-badge">
-                            <i class="fas fa-hourglass-half"></i> 30 days
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-download"></i> 50M
-                        </span>
-                        <span class="package-badge">
-                            <i class="fas fa-upload"></i> 25M
-                        </span>
-                    </div>
+                <!-- Error State -->
+                <div class="error-state" id="errorState" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Failed to load packages</p>
+                    <button class="btn-retry" onclick="loadPackages()">
+                        <i class="fas fa-refresh"></i> Retry
+                    </button>
                 </div>
             </div>
             
-            <!-- Phone Input -->
-            <div class="phone-input-group">
-                <label class="phone-label" for="phoneNumber">
-                    <i class="fas fa-mobile-alt"></i> Phone Number (M-Pesa)
-                </label>
-                <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-phone"></i>
-                    </span>
-                    <input 
-                        type="tel" 
-                        id="phoneNumber" 
-                        class="phone-input" 
-                        placeholder="e.g., 0712345678" 
-                        maxlength="10"
-                        pattern="[0-9]{10}"
-                        inputmode="numeric"
-                        required
-                    >
+            <!-- ============================================================
+            PHONE SECTION (Shown after package selection)
+            ============================================================ -->
+            <div class="phone-section" id="phoneSection" style="display: none;">
+                <div class="phone-card">
+                    <h3><i class="fas fa-mobile-alt"></i> Enter Your Phone Number</h3>
+                    
+                    <div class="selected-package-info">
+                        <span>Selected: </span>
+                        <strong id="selectedPackageName"></strong> - 
+                        <strong id="selectedPackagePrice"></strong>
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="input-icon">
+                            <i class="fas fa-phone"></i>
+                        </span>
+                        <input 
+                            type="tel" 
+                            id="phoneNumber" 
+                            class="form-input" 
+                            placeholder="e.g., 0712345678" 
+                            maxlength="10"
+                            pattern="[0-9]{10}"
+                            inputmode="numeric"
+                            required
+                        >
+                    </div>
+                    
+                    <button class="btn-connect" onclick="connectNow()" id="connectButton">
+                        <i class="fas fa-plug"></i> Connect Now
+                    </button>
+                    
+                    <button class="btn-cancel" onclick="cancelSelection()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                 </div>
             </div>
-            
-            <!-- Connect Button -->
-            <button class="connect-btn" onclick="connectNow()" id="connectButton">
-                <i class="fas fa-plug"></i> Connect Now
-            </button>
-            
-            <!-- Loading State -->
-            <div id="loadingState" style="display: none; margin-top: 16px;">
-                <div class="spinner"></div>
-                <p style="color: #718096; margin-top: 8px;">Processing payment...</p>
+        </div>
+    </main>
+    
+    <!-- ====================================================================
+    BOTTOM TV BAR
+    ==================================================================== -->
+    <div class="bottom-tv-bar" id="bottomTvBar" style="display: none;">
+        <button onclick="openTvModal()">
+            <i class="fas fa-tv"></i> Connect TV Here
+        </button>
+    </div>
+    
+    <!-- ====================================================================
+    FLOATING SUPPORT BUTTON
+    ==================================================================== -->
+    <a href="#" class="floating-phone" id="floatingPhone" onclick="callSupport(event)">
+        <i class="fas fa-phone-alt"></i>
+    </a>
+    
+    <!-- ====================================================================
+    ALREADY PAID MODAL
+    ==================================================================== -->
+    <div class="modal" id="paidModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-circle"></i> Already Paid?</h2>
+                <button class="modal-close" onclick="closeModal('paidModal')">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            
-            <!-- Footer -->
-            <div class="portal-footer">
-                <i class="fas fa-shield-alt"></i> Secure payment via M-Pesa | 
-                <i class="fas fa-wifi"></i> Powered by Lincoln's net
+            <div id="paidModalContent">
+                <p style="margin-bottom: 16px;">Checking your session...</p>
             </div>
         </div>
     </div>
     
+    <!-- ====================================================================
+    TV MODAL
+    ==================================================================== -->
+    <div class="modal" id="tvModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-tv"></i> Connect TV</h2>
+                <button class="modal-close" onclick="closeModal('tvModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p style="margin-bottom: 16px;">Enter your TV's MAC address to connect:</p>
+            
+            <div class="input-group">
+                <span class="input-icon"><i class="fas fa-tv"></i></span>
+                <input type="text" id="tvMac" class="form-input" placeholder="e.g., AA:BB:CC:DD:EE:FF">
+            </div>
+            
+            <p style="margin-bottom: 16px; margin-top: 16px;">Select a package for your TV:</p>
+            <select id="tvPackageSelect" class="form-input" style="margin-bottom: 16px;">
+                <option value="">Select package...</option>
+            </select>
+            
+            <button class="btn btn-primary btn-block" onclick="connectTv()">
+                <i class="fas fa-plug"></i> Connect TV
+            </button>
+        </div>
+    </div>
+    
+    <!-- ====================================================================
+    JAVASCRIPT
+    ==================================================================== -->
     <script>
         const BACKEND_URL = 'https://lincolns-net-backend.onrender.com';
-        let selectedPackageId = null;
+        const CURRENCY = 'KES';
         
-        /**
-         * Select a package
-         */
-        function selectPackage(element, packageId) {
-            // Remove selection from all packages
-            document.querySelectorAll('.package-card').forEach(p => {
-                p.classList.remove('selected');
-            });
-            
-            // Add selection to clicked package
-            element.classList.add('selected');
-            selectedPackageId = packageId;
+        let selectedPackageId = null;
+        let packagesList = [];
+        let supportPhone = '+254700000000';
+        let tvSupportEnabled = false;
+        
+        // ================================================================
+        // INITIALIZATION
+        // ================================================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPublicSettings();
+            loadPackages();
+            checkActiveSession();
+        });
+        
+        // ================================================================
+        // LOAD PUBLIC SETTINGS (Support Phone, TV Support)
+        // ================================================================
+        
+        async function loadPublicSettings() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/settings/public`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    supportPhone = data.support_phone || '+254700000000';
+                    tvSupportEnabled = data.tv_support_enabled || false;
+                    
+                    // Update floating phone link
+                    document.getElementById('floatingPhone').href = `tel:${supportPhone}`;
+                    
+                    // Show/hide TV bar
+                    if (tvSupportEnabled) {
+                        document.getElementById('bottomTvBar').style.display = 'flex';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
         }
         
-        /**
-         * Connect to WiFi after payment
-         */
+        // ================================================================
+        // LOAD PACKAGES FROM DATABASE
+        // ================================================================
+        
+        async function loadPackages() {
+            const grid = document.getElementById('pricingGrid');
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+            
+            loading.style.display = 'flex';
+            error.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/packages`);
+                const data = await response.json();
+                
+                if (data.success && data.packages.length > 0) {
+                    packagesList = data.packages.filter(pkg => pkg.is_active);
+                    renderPackages(packagesList);
+                    populateTvPackageSelect(packagesList);
+                } else {
+                    error.style.display = 'flex';
+                }
+            } catch (err) {
+                console.error('Error loading packages:', err);
+                error.style.display = 'flex';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // ================================================================
+        // RENDER PACKAGES IN 2-COLUMN GRID
+        // ================================================================
+        
+        function renderPackages(packages) {
+            const grid = document.getElementById('pricingGrid');
+            
+            if (packages.length === 0) {
+                grid.innerHTML = `
+                    <div class="error-state" style="display: flex; grid-column: 1 / -1;">
+                        <i class="fas fa-box-open"></i>
+                        <p>No packages available at the moment</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = packages.map(pkg => `
+                <div class="pricing-card ${pkg.supports_tv ? 'supports-tv' : ''}" 
+                     onclick="selectPackage(${pkg.id})" 
+                     data-package-id="${pkg.id}">
+                    <div class="card-details">
+                        <p class="plan-title">${pkg.name}</p>
+                        <h3 class="price">${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}</h3>
+                        <p class="duration">
+                            <i class="fas fa-hourglass-half"></i> ${formatDuration(pkg.duration_seconds)}
+                        </p>
+                        <div class="package-meta">
+                            <span class="speed-badge">
+                                <i class="fas fa-download"></i> ${pkg.download_rate_limit}
+                            </span>
+                            <span class="speed-badge">
+                                <i class="fas fa-upload"></i> ${pkg.upload_rate_limit}
+                            </span>
+                            ${pkg.max_users > 1 ? `
+                            <span class="users-badge">
+                                <i class="fas fa-users"></i> ${pkg.max_users} users
+                            </span>
+                            ` : `
+                            <span class="users-badge single">
+                                <i class="fas fa-user"></i> 1 device
+                            </span>
+                            `}
+                            ${pkg.supports_tv ? `
+                            <span class="tv-badge">
+                                <i class="fas fa-tv"></i> TV
+                            </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <button class="btn-select">
+                        <i class="fas fa-mouse-pointer"></i> Click Here
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // ================================================================
+        // POPULATE TV PACKAGE SELECT
+        // ================================================================
+        
+        function populateTvPackageSelect(packages) {
+            const select = document.getElementById('tvPackageSelect');
+            const tvPackages = packages.filter(pkg => pkg.supports_tv);
+            
+            if (tvPackages.length === 0) {
+                select.innerHTML = '<option value="">No TV packages available</option>';
+                return;
+            }
+            
+            select.innerHTML = tvPackages.map(pkg => `
+                <option value="${pkg.id}">${pkg.name} - ${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}</option>
+            `).join('');
+        }
+        
+        // ================================================================
+        // CHECK ACTIVE SESSION (Already Paid Feature)
+        // ================================================================
+        
+        async function checkActiveSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mac = urlParams.get('mac') || '';
+            
+            if (!mac) return;
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/check-active-session?mac=${encodeURIComponent(mac)}`);
+                const data = await response.json();
+                
+                if (data.success && data.has_active_session) {
+                    showPaidModalWithSession(data.transaction);
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+            }
+        }
+        
+        function checkAlreadyPaid(event) {
+            event.preventDefault();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const mac = urlParams.get('mac') || '';
+            
+            if (!mac) {
+                document.getElementById('paidModalContent').innerHTML = `
+                    <p style="margin-bottom: 16px;">We couldn't detect your device. Please enter your phone number:</p>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-phone"></i></span>
+                        <input type="tel" id="reconnectPhone" class="form-input" placeholder="Phone number" maxlength="10">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="checkByPhone()">
+                        <i class="fas fa-search"></i> Check Session
+                    </button>
+                `;
+            } else {
+                document.getElementById('paidModalContent').innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 12px;">Checking your session...</p>
+                    </div>
+                `;
+                
+                fetch(`${BACKEND_URL}/api/check-active-session?mac=${encodeURIComponent(mac)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.has_active_session) {
+                            showPaidModalWithSession(data.transaction);
+                        } else {
+                            document.getElementById('paidModalContent').innerHTML = `
+                                <p style="margin-bottom: 16px; color: #e53e3e;">
+                                    <i class="fas fa-exclamation-circle"></i> 
+                                    No active session found. Please purchase a new package.
+                                </p>
+                                <button class="btn btn-primary btn-block" onclick="closeModal('paidModal')">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            `;
+                        }
+                    });
+            }
+            
+            document.getElementById('paidModal').classList.add('open');
+        }
+        
+        function showPaidModalWithSession(transaction) {
+            const pkg = transaction.package || {};
+            const expiresAt = transaction.expires_at ? new Date(transaction.expires_at).toLocaleString() : 'N/A';
+            
+            document.getElementById('paidModalContent').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-check-circle" style="font-size: 48px; color: #48bb78;"></i>
+                    <h3 style="margin: 16px 0; color: #2d3748;">Active Session Found!</h3>
+                    <p style="margin-bottom: 8px;"><strong>Package:</strong> ${pkg.name || 'Unknown'}</p>
+                    <p style="margin-bottom: 8px;"><strong>Expires:</strong> ${expiresAt}</p>
+                    <button class="btn btn-success btn-block" onclick="reconnectDevice()">
+                        <i class="fas fa-plug"></i> Reconnect Now
+                    </button>
+                </div>
+            `;
+        }
+        
+        function checkByPhone() {
+            const phone = document.getElementById('reconnectPhone').value;
+            if (!phone) {
+                alert('Please enter your phone number');
+                return;
+            }
+            // Implement phone-based check if needed
+            alert('Phone number check coming soon');
+        }
+        
+        function reconnectDevice() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mac = urlParams.get('mac') || '';
+            const linkLoginOnly = urlParams.get('link_login_only') || '';
+            
+            // Redirect to success page with MAC
+            window.location.href = `${BACKEND_URL}/success?mac=${mac}&link_login_only=${linkLoginOnly}`;
+        }
+        
+        // ================================================================
+        // PACKAGE SELECTION
+        // ================================================================
+        
+        function selectPackage(packageId) {
+            selectedPackageId = packageId;
+            
+            // Update selected state
+            document.querySelectorAll('.pricing-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-package-id="${packageId}"]`).classList.add('selected');
+            
+            // Show phone section
+            const pkg = packagesList.find(p => p.id === packageId);
+            if (pkg) {
+                document.getElementById('selectedPackageName').textContent = pkg.name;
+                document.getElementById('selectedPackagePrice').textContent = `${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}`;
+                document.getElementById('phoneSection').style.display = 'block';
+                
+                // Scroll to phone section
+                document.getElementById('phoneSection').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        function cancelSelection() {
+            selectedPackageId = null;
+            document.querySelectorAll('.pricing-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById('phoneSection').style.display = 'none';
+        }
+        
+        // ================================================================
+        // CONNECT TO WIFI
+        // ================================================================
+        
         async function connectNow() {
             const phoneNumber = document.getElementById('phoneNumber').value;
             const connectButton = document.getElementById('connectButton');
-            const loadingState = document.getElementById('loadingState');
             
-            // Validate package selection
             if (!selectedPackageId) {
                 showAlert('Please select a package', 'warning');
                 return;
             }
             
-            // Validate phone number
             if (!phoneNumber || phoneNumber.length < 10) {
                 showAlert('Please enter a valid 10-digit phone number', 'warning');
                 return;
             }
             
-            // Disable button and show loading
             connectButton.disabled = true;
             connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            loadingState.style.display = 'block';
             
-            // Get URL parameters from MikroTik
             const urlParams = new URLSearchParams(window.location.search);
             const mac = urlParams.get('mac') || '';
             const ip = urlParams.get('ip') || '';
             const linkLoginOnly = urlParams.get('link_login_only') || '';
             
             try {
-                const response = await fetch(`${BACKEND_URL}/pay`, {
+                const response = await fetch(`${BACKEND_URL}/api/pay`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         package_id: selectedPackageId,
                         phone_number: phoneNumber,
                         mac: mac,
                         ip: ip,
                         link_login_only: linkLoginOnly,
+                        device_type: 'phone',
                     }),
                 });
                 
                 const data = await response.json();
                 
-                if (response.ok && data.redirect_url) {
-                    // Redirect to payment gateway or success page
-                    window.location.href = data.redirect_url;
-                } else if (response.ok) {
-                    // Payment initiated
+                if (response.ok && data.success) {
                     showAlert('Payment initiated! Check your phone for M-Pesa prompt.', 'success');
-                    
-                    // Check payment status after 5 seconds
-                    setTimeout(() => checkPaymentStatus(data.transaction_id), 5000);
                 } else {
-                    showAlert(data.detail || 'Payment initiation failed', 'error');
+                    showAlert(data.error || 'Payment initiation failed', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showAlert('Error connecting to payment service. Please try again.', 'error');
+                showAlert('Error connecting to payment service', 'error');
             } finally {
-                // Re-enable button
                 connectButton.disabled = false;
                 connectButton.innerHTML = '<i class="fas fa-plug"></i> Connect Now';
-                loadingState.style.display = 'none';
             }
         }
         
-        /**
-         * Check payment status
-         */
-        async function checkPaymentStatus(transactionId) {
-            if (!transactionId) return;
+        // ================================================================
+        // TV CONNECTION
+        // ================================================================
+        
+        function openTvModal() {
+            document.getElementById('tvModal').classList.add('open');
+        }
+        
+        async function connectTv() {
+            const tvMac = document.getElementById('tvMac').value.trim();
+            const packageId = document.getElementById('tvPackageSelect').value;
+            
+            if (!tvMac) {
+                alert('Please enter TV MAC address');
+                return;
+            }
+            
+            if (!packageId) {
+                alert('Please select a package');
+                return;
+            }
             
             try {
-                const response = await fetch(`${BACKEND_URL}/payment/status/${transactionId}`);
+                const response = await fetch(`${BACKEND_URL}/api/connect-tv`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tv_mac: tvMac,
+                        package_id: parseInt(packageId),
+                    }),
+                });
+                
                 const data = await response.json();
                 
-                if (data.status === 'SUCCESS') {
-                    showAlert('Payment successful! Connecting you to WiFi...', 'success');
-                    
-                    // Redirect to success page
-                    setTimeout(() => {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        window.location.href = `${BACKEND_URL}/success?${urlParams.toString()}`;
-                    }, 2000);
-                } else if (data.status === 'FAILED') {
-                    showAlert('Payment failed. Please try again.', 'error');
+                if (data.success) {
+                    alert('TV connected successfully!');
+                    closeModal('tvModal');
                 } else {
-                    // Still pending, check again
-                    setTimeout(() => checkPaymentStatus(transactionId), 5000);
+                    alert(data.error || 'Failed to connect TV');
                 }
             } catch (error) {
-                console.error('Error checking payment:', error);
+                console.error('Error:', error);
+                alert('Error connecting TV');
             }
         }
         
-        /**
-         * Show alert message
-         */
+        // ================================================================
+        // SUPPORT CALL
+        // ================================================================
+        
+        function callSupport(event) {
+            event.preventDefault();
+            window.location.href = `tel:${supportPhone}`;
+        }
+        
+        // ================================================================
+        // UTILITY FUNCTIONS
+        // ================================================================
+        
+        function formatDuration(seconds) {
+            if (!seconds) return '-';
+            if (seconds < 60) return `${seconds} sec`;
+            if (seconds < 3600) return `${Math.floor(seconds / 60)} mins`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)} hrs`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)} days`;
+            return `${Math.floor(seconds / 2592000)} months`;
+        }
+        
         function showAlert(message, type = 'info') {
-            // Remove existing alert
             const existingAlert = document.querySelector('.portal-alert');
-            if (existingAlert) {
-                existingAlert.remove();
-            }
+            if (existingAlert) existingAlert.remove();
             
-            // Create alert element
             const alert = document.createElement('div');
             alert.className = `portal-alert portal-alert-${type}`;
             alert.innerHTML = `
-                <i class="fas fa-${getAlertIcon(type)}"></i>
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
                 <span>${message}</span>
             `;
             
-            // Insert after connect button
-            const connectButton = document.getElementById('connectButton');
-            connectButton.parentNode.insertBefore(alert, connectButton.nextSibling);
+            const phoneSection = document.getElementById('phoneSection');
+            phoneSection.parentNode.insertBefore(alert, phoneSection.nextSibling);
             
-            // Auto-remove after 5 seconds
             setTimeout(() => {
-                if (alert.parentElement) {
-                    alert.remove();
-                }
+                if (alert.parentElement) alert.remove();
             }, 5000);
         }
         
-        /**
-         * Get alert icon
-         */
-        function getAlertIcon(type) {
-            switch (type) {
-                case 'success': return 'check-circle';
-                case 'error': return 'exclamation-circle';
-                case 'warning': return 'exclamation-triangle';
-                default: return 'info-circle';
-            }
-        }
-        
-        // Auto-select first package on mobile
-        if (window.innerWidth <= 480) {
-            const firstPackage = document.querySelector('.package-card');
-            if (firstPackage) {
-                selectPackage(firstPackage, 1);
-            }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('open');
         }
     </script>
 </body>

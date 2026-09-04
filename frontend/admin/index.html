@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Lincoln's net</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- LOGIN VIEW (shown when not authenticated) -->
+    <div id="loginView" class="auth-container" style="display: none;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">🔐</div>
+                <h1 class="auth-title">Admin Login</h1>
+                <p class="auth-subtitle">Lincoln's net Administration Console</p>
+            </div>
+            
+            <div id="loginError" style="display: none; background: #fed7d7; color: #742a2a; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                Invalid username or password
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="username" class="form-input" placeholder="Enter username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- DASHBOARD VIEW (shown when authenticated) -->
+    <div id="dashboardView" class="dashboard-container" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Lincoln's net</div>
+                <small style="color: #a0aec0;">Admin Console</small>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="showSection('dashboard')">
+                        <span class="nav-icon">📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('packages')">
+                        <span class="nav-icon">📦</span> Packages
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('transactions')">
+                        <span class="nav-icon">🔄</span> Transactions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('settings')">
+                        <span class="nav-icon">⚙️</span> Settings
+                    </a>
+                </li>
+                <li class="nav-item" style="margin-top: auto;">
+                    <a class="nav-link" onclick="logout()" style="color: #e53e3e;">
+                        <span class="nav-icon">🚪</span> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <button class="btn btn-primary" onclick="toggleSidebar()" id="menuBtn" style="display:none;">☰</button>
+            
+            <!-- Dashboard Section -->
+            <div id="dashboard-section">
+                <h1 style="font-size: 28px; color: #2d3748; margin-bottom: 24px;">Dashboard</h1>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Packages</div>
+                        <div class="stat-value" id="totalPackages">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Packages</div>
+                        <div class="stat-value" id="activePackages">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value" id="totalRevenue">KES 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Transactions</div>
+                        <div class="stat-value" id="totalTransactions">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Customers</div>
+                        <div class="stat-value" id="activeCustomers">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Packages Section -->
+            <div id="packages-section" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h1 style="font-size: 28px; color: #2d3748;">Internet Packages</h1>
+                    <button class="btn btn-primary" onclick="openPackageModal()">+ Add Package</button>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price (KES)</th>
+                                <th>Duration</th>
+                                <th>Bandwidth</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="packagesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Transactions Section -->
+            <div id="transactions-section" style="display: none;">
+                <h1 style="font-size: 28px; color: #2d3748; margin-bottom: 24px;">Transactions</h1>
+                
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Phone</th>
+                                <th>Amount (KES)</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div id="settings-section" style="display: none;">
+                <h1 style="font-size: 28px; color: #2d3748; margin-bottom: 24px;">Settings</h1>
+                
+                <div class="card">
+                    <h2>System Settings</h2>
+                    <div id="settingsContent">
+                        <p>Loading settings...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Package Modal -->
+    <div class="modal" id="packageModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Add Package</h2>
+            <form id="packageForm">
+                <div class="form-group">
+                    <label class="form-label">Package Name *</label>
+                    <input type="text" class="form-input" id="packageName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" id="packageDescription" rows="3"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Price (KES) *</label>
+                        <input type="number" class="form-input" id="packagePrice" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Duration (seconds) *</label>
+                        <input type="number" class="form-input" id="packageDuration" min="60" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Download Limit (e.g., 5M)</label>
+                        <input type="text" class="form-input" id="packageDownload" value="5M" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Upload Limit (e.g., 2M)</label>
+                        <input type="text" class="form-input" id="packageUpload" value="2M" required>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-danger" onclick="closePackageModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Package</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="../js/admin.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 """
 Lincoln's net - Database Configuration
 Optimized for Supabase connection on Render with PgBouncer support
+Fixed: Removed incorrect await on fetchone() and scalar()
 """
 
 import os
@@ -9,7 +10,7 @@ import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -56,7 +57,6 @@ def get_database_url() -> str:
     # Strategy 2: Use Supabase Pooler (recommended for Render)
     encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
     
-    # Try pooler connection first (better for cloud services)
     pooler_url = (
         f"postgresql+asyncpg://{DB_POOLER_USER}:{encoded_password}"
         f"@{DB_POOLER_HOST}:{DB_POOLER_PORT}/{DB_NAME}"
@@ -89,11 +89,10 @@ engine = create_async_engine(
     pool_recycle=300,
     pool_timeout=30,
     connect_args={
-        "ssl": "require",  # Supabase requires SSL
+        "ssl": "require",
         "statement_cache_size": 0,  # CRITICAL: Fix for PgBouncer prepared statements
-        "prepared_statement_cache_size": 0,  # Alternative fix
-        "command_timeout": 30,  # Command timeout in seconds
-        "timeout": 30,  # Connection timeout
+        "command_timeout": 30,
+        "timeout": 30,
         "server_settings": {
             "application_name": "lincolns_net",
             "search_path": "public",
@@ -141,7 +140,6 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def init_db():
     """
     Initialize database tables if they don't exist.
-    Uses CREATE TABLE IF NOT EXISTS semantics.
     """
     try:
         async with engine.begin() as conn:
@@ -162,6 +160,9 @@ async def check_db_connection() -> bool:
     """
     Check database connectivity with retry logic.
     Returns True if connection successful.
+    
+    NOTE: fetchone() and scalar() are SYNCHRONOUS methods.
+    Do NOT use await on them!
     """
     max_retries = 5
     retry_delay = 3  # seconds
@@ -169,10 +170,19 @@ async def check_db_connection() -> bool:
     for attempt in range(max_retries):
         try:
             async with engine.connect() as conn:
+                # Execute query (this IS async)
                 result = await conn.execute(text("SELECT 1"))
-                await result.fetchone()
-                logger.info("✅ Database connection successful")
-                return True
+                
+                # Fetch result (this is NOT async - no await!)
+                row = result.fetchone()
+                
+                # Check if we got a result
+                if row is not None:
+                    logger.info("✅ Database connection successful")
+                    return True
+                else:
+                    logger.error("Database returned no result")
+                    
         except Exception as e:
             logger.error(
                 f"Database connection attempt {attempt + 1}/{max_retries} failed: {str(e)}"
@@ -194,23 +204,23 @@ async def close_db_connection():
         logger.warning(f"⚠️ Error closing database connections: {str(e)}")
 
 
-async def test_database_query() -> dict:
+async def test_database_query() -> Dict[str, Any]:
     """
     Test database with actual query.
     Returns result dictionary.
     """
     try:
         async with AsyncSessionLocal() as session:
-            # Test basic query
+            # Test basic query - use scalar() WITHOUT await
             result = await session.execute(text("SELECT NOW()"))
-            current_time = result.scalar()
+            current_time = result.scalar()  # NO await!
             
             # Test if tables exist
             try:
                 result = await session.execute(
                     text("SELECT COUNT(*) FROM internet_packages")
                 )
-                package_count = result.scalar()
+                package_count = result.scalar()  # NO await!
             except:
                 package_count = 0
             
@@ -219,7 +229,7 @@ async def test_database_query() -> dict:
                 result = await session.execute(
                     text("SELECT COUNT(*) FROM payment_gateway_accounts")
                 )
-                gateway_count = result.scalar()
+                gateway_count = result.scalar()  # NO await!
             except:
                 gateway_count = 0
             
@@ -239,35 +249,35 @@ async def test_database_query() -> dict:
         }
 
 
-async def get_database_stats() -> dict:
+async def get_database_stats() -> Dict[str, Any]:
     """
     Get database statistics.
     """
     try:
         async with AsyncSessionLocal() as session:
-            # Count packages
+            # Count packages - use scalar() WITHOUT await
             result = await session.execute(
                 text("SELECT COUNT(*) FROM internet_packages")
             )
-            total_packages = result.scalar()
+            total_packages = result.scalar()  # NO await!
             
             # Count active packages
             result = await session.execute(
                 text("SELECT COUNT(*) FROM internet_packages WHERE is_active = TRUE")
             )
-            active_packages = result.scalar()
+            active_packages = result.scalar()  # NO await!
             
             # Count transactions
             result = await session.execute(
                 text("SELECT COUNT(*) FROM billing_transactions")
             )
-            total_transactions = result.scalar()
+            total_transactions = result.scalar()  # NO await!
             
             # Count successful transactions
             result = await session.execute(
                 text("SELECT COUNT(*) FROM billing_transactions WHERE status = 'SUCCESS'")
             )
-            successful_transactions = result.scalar()
+            successful_transactions = result.scalar()  # NO await!
             
             return {
                 "total_packages": total_packages or 0,

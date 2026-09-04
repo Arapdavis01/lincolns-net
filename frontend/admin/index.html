@@ -13,7 +13,7 @@
 </head>
 <body>
     <!-- ========================================================================
-    LOGIN VIEW (shown when not authenticated)
+    LOGIN VIEW
     ======================================================================== -->
     <div id="loginView" class="auth-container" style="display: none;">
         <div class="auth-card">
@@ -25,63 +25,35 @@
                 <p class="auth-subtitle">Lincoln's net Administration Console</p>
             </div>
             
-            <!-- Error Message -->
             <div id="loginError" class="alert-error" style="display: none; margin-bottom: 16px;">
                 <i class="fas fa-exclamation-circle"></i>
                 <span id="loginErrorText">Invalid username or password</span>
             </div>
             
-            <!-- Login Form -->
             <form id="loginForm" autocomplete="off">
-                <!-- Username Field -->
                 <div class="form-group">
                     <label class="form-label" for="username">
                         <i class="fas fa-user"></i> Username
                     </label>
                     <div class="input-group">
-                        <span class="input-icon">
-                            <i class="fas fa-user"></i>
-                        </span>
-                        <input 
-                            type="text" 
-                            id="username" 
-                            class="form-input" 
-                            placeholder="Enter your username" 
-                            required
-                            autocomplete="username"
-                        >
+                        <span class="input-icon"><i class="fas fa-user"></i></span>
+                        <input type="text" id="username" class="form-input" placeholder="Enter your username" required autocomplete="username">
                     </div>
                 </div>
                 
-                <!-- Password Field with Eye Toggle -->
                 <div class="form-group">
                     <label class="form-label" for="password">
                         <i class="fas fa-key"></i> Password
                     </label>
                     <div class="input-group">
-                        <span class="input-icon">
-                            <i class="fas fa-key"></i>
-                        </span>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            class="form-input" 
-                            placeholder="Enter your password" 
-                            required
-                            autocomplete="current-password"
-                        >
-                        <button 
-                            type="button" 
-                            class="password-toggle" 
-                            onclick="togglePasswordVisibility()"
-                            aria-label="Toggle password visibility"
-                        >
+                        <span class="input-icon"><i class="fas fa-key"></i></span>
+                        <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
                             <i class="fas fa-eye" id="eyeIcon"></i>
                         </button>
                     </div>
                 </div>
                 
-                <!-- Login Button -->
                 <button type="submit" class="btn btn-primary btn-block" id="loginButton">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
@@ -90,47 +62,45 @@
     </div>
     
     <!-- ========================================================================
-    DASHBOARD VIEW (shown when authenticated)
+    DASHBOARD VIEW
     ======================================================================== -->
     <div id="dashboardView" class="dashboard-container" style="display: none;">
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-title">
-                    <i class="fas fa-wifi"></i> Lincoln's net
-                </div>
+                <div class="sidebar-title"><i class="fas fa-wifi"></i> Lincoln's net</div>
                 <small style="color: #a0aec0;">Admin Console</small>
             </div>
             
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a class="nav-link active" onclick="showSection('dashboard')">
-                        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
-                        Dashboard
+                        <span class="nav-icon"><i class="fas fa-chart-bar"></i></span> Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" onclick="showSection('packages')">
-                        <span class="nav-icon"><i class="fas fa-box"></i></span>
-                        Packages
+                        <span class="nav-icon"><i class="fas fa-box"></i></span> Packages
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" onclick="showSection('transactions')">
-                        <span class="nav-icon"><i class="fas fa-exchange-alt"></i></span>
-                        Transactions
+                        <span class="nav-icon"><i class="fas fa-exchange-alt"></i></span> Transactions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('tv-devices')">
+                        <span class="nav-icon"><i class="fas fa-tv"></i></span> TV Devices
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" onclick="showSection('settings')">
-                        <span class="nav-icon"><i class="fas fa-cog"></i></span>
-                        Settings
+                        <span class="nav-icon"><i class="fas fa-cog"></i></span> Settings
                     </a>
                 </li>
                 <li class="nav-item" style="margin-top: auto;">
                     <a class="nav-link" onclick="logout()" style="color: #e53e3e;">
-                        <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>
-                        Logout
+                        <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span> Logout
                     </a>
                 </li>
             </ul>
@@ -138,7 +108,6 @@
         
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Mobile Menu Button -->
             <button class="btn btn-primary" onclick="toggleSidebar()" id="menuBtn" style="display:none;">
                 <i class="fas fa-bars"></i>
             </button>
@@ -147,49 +116,38 @@
             DASHBOARD SECTION
             ============================================================ -->
             <div id="dashboard-section">
-                <h1 class="page-title">
-                    <i class="fas fa-chart-bar"></i> Dashboard
-                </h1>
+                <h1 class="page-title"><i class="fas fa-chart-bar"></i> Dashboard</h1>
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #667eea;">
-                            <i class="fas fa-box"></i>
-                        </div>
+                        <div class="stat-icon" style="background: #667eea;"><i class="fas fa-box"></i></div>
                         <div class="stat-label">Total Packages</div>
                         <div class="stat-value" id="totalPackages">0</div>
                     </div>
-                    
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #48bb78;">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
+                        <div class="stat-icon" style="background: #48bb78;"><i class="fas fa-check-circle"></i></div>
                         <div class="stat-label">Active Packages</div>
                         <div class="stat-value" id="activePackages">0</div>
                     </div>
-                    
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #ed8936;">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
+                        <div class="stat-icon" style="background: #ed8936;"><i class="fas fa-money-bill-wave"></i></div>
                         <div class="stat-label">Total Revenue</div>
                         <div class="stat-value" id="totalRevenue">KES 0</div>
                     </div>
-                    
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #4299e1;">
-                            <i class="fas fa-exchange-alt"></i>
-                        </div>
+                        <div class="stat-icon" style="background: #4299e1;"><i class="fas fa-exchange-alt"></i></div>
                         <div class="stat-label">Transactions</div>
                         <div class="stat-value" id="totalTransactions">0</div>
                     </div>
-                    
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #9f7aea;">
-                            <i class="fas fa-users"></i>
-                        </div>
+                        <div class="stat-icon" style="background: #9f7aea;"><i class="fas fa-users"></i></div>
                         <div class="stat-label">Active Customers</div>
                         <div class="stat-value" id="activeCustomers">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e53e3e;"><i class="fas fa-tv"></i></div>
+                        <div class="stat-label">TV Devices</div>
+                        <div class="stat-value" id="totalTvDevices">0</div>
                     </div>
                 </div>
             </div>
@@ -199,9 +157,7 @@
             ============================================================ -->
             <div id="packages-section" style="display: none;">
                 <div class="section-header">
-                    <h1 class="page-title">
-                        <i class="fas fa-box"></i> Internet Packages
-                    </h1>
+                    <h1 class="page-title"><i class="fas fa-box"></i> Internet Packages</h1>
                     <button class="btn btn-primary" onclick="openPackageModal()">
                         <i class="fas fa-plus"></i> Add Package
                     </button>
@@ -211,12 +167,14 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th><i class="fas fa-tag"></i> Name</th>
-                                <th><i class="fas fa-money-bill"></i> Price (KES)</th>
-                                <th><i class="fas fa-clock"></i> Duration</th>
-                                <th><i class="fas fa-tachometer-alt"></i> Bandwidth</th>
-                                <th><i class="fas fa-circle"></i> Status</th>
-                                <th><i class="fas fa-tools"></i> Actions</th>
+                                <th>Name</th>
+                                <th>Price (KES)</th>
+                                <th>Duration</th>
+                                <th>Bandwidth</th>
+                                <th>Users</th>
+                                <th>TV</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="packagesTableBody"></tbody>
@@ -228,19 +186,18 @@
             TRANSACTIONS SECTION
             ============================================================ -->
             <div id="transactions-section" style="display: none;">
-                <h1 class="page-title">
-                    <i class="fas fa-exchange-alt"></i> Transactions
-                </h1>
+                <h1 class="page-title"><i class="fas fa-exchange-alt"></i> Transactions</h1>
                 
                 <div class="table-wrapper">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th><i class="fas fa-hashtag"></i> Transaction ID</th>
-                                <th><i class="fas fa-phone"></i> Phone</th>
-                                <th><i class="fas fa-money-bill"></i> Amount (KES)</th>
-                                <th><i class="fas fa-circle"></i> Status</th>
-                                <th><i class="fas fa-calendar"></i> Date</th>
+                                <th>Transaction ID</th>
+                                <th>Phone</th>
+                                <th>Amount (KES)</th>
+                                <th>Device</th>
+                                <th>Status</th>
+                                <th>Date</th>
                             </tr>
                         </thead>
                         <tbody id="transactionsTableBody"></tbody>
@@ -249,12 +206,32 @@
             </div>
             
             <!-- ============================================================
+            TV DEVICES SECTION
+            ============================================================ -->
+            <div id="tv-devices-section" style="display: none;">
+                <h1 class="page-title"><i class="fas fa-tv"></i> TV Devices</h1>
+                
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>MAC Address</th>
+                                <th>Package</th>
+                                <th>Status</th>
+                                <th>Expires</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tvDevicesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ============================================================
             SETTINGS SECTION
             ============================================================ -->
             <div id="settings-section" style="display: none;">
-                <h1 class="page-title">
-                    <i class="fas fa-cog"></i> Settings
-                </h1>
+                <h1 class="page-title"><i class="fas fa-cog"></i> Settings</h1>
                 
                 <div class="card">
                     <h2><i class="fas fa-sliders-h"></i> System Settings</h2>
@@ -267,65 +244,106 @@
     </div>
     
     <!-- ========================================================================
-    PACKAGE MODAL
+    PACKAGE MODAL (Organized Fields)
     ======================================================================== -->
     <div class="modal" id="packageModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-plus-circle"></i> Add Package</h2>
-                <button class="modal-close" onclick="closePackageModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h2 id="packageModalTitle"><i class="fas fa-plus-circle"></i> Add Package</h2>
+                <button class="modal-close" onclick="closePackageModal()"><i class="fas fa-times"></i></button>
             </div>
             
             <form id="packageForm">
-                <div class="form-group">
-                    <label class="form-label" for="packageName">
-                        <i class="fas fa-tag"></i> Package Name *
-                    </label>
-                    <input type="text" class="form-input" id="packageName" placeholder="e.g., Daily Pass" required>
-                </div>
+                <input type="hidden" id="packageId" value="">
                 
-                <div class="form-group">
-                    <label class="form-label" for="packageDescription">
-                        <i class="fas fa-align-left"></i> Description
-                    </label>
-                    <textarea class="form-input" id="packageDescription" rows="3" placeholder="Describe the package..."></textarea>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <!-- Section 1: Basic Information -->
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</h3>
+                    
                     <div class="form-group">
-                        <label class="form-label" for="packagePrice">
-                            <i class="fas fa-money-bill"></i> Price (KES) *
+                        <label class="form-label" for="packageName">
+                            <i class="fas fa-tag"></i> Package Name *
                         </label>
-                        <input type="number" class="form-input" id="packagePrice" min="1" placeholder="e.g., 300" required>
+                        <input type="text" class="form-input" id="packageName" placeholder="e.g., Daily Pass" required>
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label" for="packageDuration">
-                            <i class="fas fa-clock"></i> Duration (seconds) *
+                        <label class="form-label" for="packageDescription">
+                            <i class="fas fa-align-left"></i> Description
                         </label>
-                        <input type="number" class="form-input" id="packageDuration" min="60" placeholder="e.g., 86400" required>
-                        <small class="form-hint">86400 = 1 day</small>
+                        <textarea class="form-input" id="packageDescription" rows="3" placeholder="Describe the package..."></textarea>
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label class="form-label" for="packageDownload">
-                            <i class="fas fa-download"></i> Download Limit
-                        </label>
-                        <input type="text" class="form-input" id="packageDownload" value="5M" required>
-                    </div>
+                <!-- Section 2: Pricing & Duration -->
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-money-bill-wave"></i> Pricing & Duration</h3>
                     
-                    <div class="form-group">
-                        <label class="form-label" for="packageUpload">
-                            <i class="fas fa-upload"></i> Upload Limit
-                        </label>
-                        <input type="text" class="form-input" id="packageUpload" value="2M" required>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="packagePrice">
+                                <i class="fas fa-money-bill"></i> Price (KES) *
+                            </label>
+                            <input type="number" class="form-input" id="packagePrice" min="1" placeholder="e.g., 300" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="packageDuration">
+                                <i class="fas fa-clock"></i> Duration (seconds) *
+                            </label>
+                            <input type="number" class="form-input" id="packageDuration" min="60" placeholder="e.g., 86400" required>
+                            <small class="form-hint">3600=1hr, 86400=1day, 604800=1week</small>
+                        </div>
                     </div>
                 </div>
                 
+                <!-- Section 3: Bandwidth -->
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-tachometer-alt"></i> Bandwidth Settings</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="packageDownload">
+                                <i class="fas fa-download"></i> Download Limit
+                            </label>
+                            <input type="text" class="form-input" id="packageDownload" value="5M" placeholder="e.g., 5M" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="packageUpload">
+                                <i class="fas fa-upload"></i> Upload Limit
+                            </label>
+                            <input type="text" class="form-input" id="packageUpload" value="2M" placeholder="e.g., 2M" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section 4: Device Settings -->
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-devices"></i> Device Settings</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label" for="packageMaxUsers">
+                                <i class="fas fa-users"></i> Max Users *
+                            </label>
+                            <input type="number" class="form-input" id="packageMaxUsers" min="1" max="10" value="1" required>
+                            <small class="form-hint">1 = single device only</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="packageSupportsTv">
+                                <i class="fas fa-tv"></i> TV Support
+                            </label>
+                            <div class="form-checkbox">
+                                <input type="checkbox" id="packageSupportsTv">
+                                <span>This package supports TV connections</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Buttons -->
                 <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
                     <button type="button" class="btn btn-secondary" onclick="closePackageModal()">
                         <i class="fas fa-times"></i> Cancel
@@ -338,7 +356,6 @@
         </div>
     </div>
     
-    <!-- JavaScript -->
     <script src="../js/admin.js"></script>
 </body>
 </html>

@@ -34,6 +34,8 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         
         .sidebar-header {
@@ -61,6 +63,7 @@
         .nav-menu {
             list-style: none;
             padding: 0;
+            flex: 1;
         }
         
         .nav-item {
@@ -78,6 +81,7 @@
             font-size: 15px;
             font-weight: 500;
             position: relative;
+            cursor: pointer;
         }
         
         .nav-link:hover {
@@ -99,17 +103,23 @@
             text-align: center;
         }
         
-        .nav-link .nav-badge {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #e53e3e;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
+        .logout-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            color: #e53e3e;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-size: 15px;
+            font-weight: 500;
+            margin-top: auto;
+            cursor: pointer;
+        }
+        
+        .logout-link:hover {
+            background: rgba(229, 62, 62, 0.1);
+            color: #e53e3e;
         }
         
         /* Main Content Styles */
@@ -220,10 +230,6 @@
             color: #48bb78;
         }
         
-        .stat-change.negative {
-            color: #e53e3e;
-        }
-        
         /* Card Styles */
         .card {
             background: white;
@@ -231,7 +237,6 @@
             padding: 24px;
             margin-bottom: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s;
         }
         
         .card-header {
@@ -276,38 +281,19 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
         
         .btn-success {
             background: #48bb78;
             color: white;
-            box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
-        }
-        
-        .btn-warning {
-            background: #ed8936;
-            color: white;
-            box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
         }
         
         .btn-danger {
             background: #e53e3e;
             color: white;
-            box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
         }
         
         .btn-secondary {
@@ -318,16 +304,6 @@
         .btn-sm {
             padding: 6px 12px;
             font-size: 12px;
-            border-radius: 6px;
-        }
-        
-        .btn-icon {
-            width: 32px;
-            height: 32px;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
             border-radius: 6px;
         }
         
@@ -353,9 +329,6 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e2e8f0;
-            position: sticky;
-            top: 0;
-            z-index: 1;
         }
         
         .table td {
@@ -363,10 +336,6 @@
             border-bottom: 1px solid #e2e8f0;
             font-size: 14px;
             color: #4a5568;
-        }
-        
-        .table tbody tr {
-            transition: all 0.2s;
         }
         
         .table tbody tr:hover {
@@ -444,7 +413,6 @@
             background: white;
             color: #2d3748;
             -webkit-appearance: none;
-            -moz-appearance: none;
             appearance: none;
         }
         
@@ -452,15 +420,6 @@
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .form-input::placeholder {
-            color: #a0aec0;
-        }
-        
-        .form-input:disabled {
-            background: #f7fafc;
-            cursor: not-allowed;
         }
         
         .form-select {
@@ -492,23 +451,10 @@
             cursor: pointer;
         }
         
-        .form-checkbox input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-        
         .form-hint {
             font-size: 12px;
             color: #a0aec0;
             margin-top: 4px;
-        }
-        
-        .form-error {
-            color: #e53e3e;
-            font-size: 12px;
-            margin-top: 4px;
-            display: none;
         }
         
         /* Modal Styles */
@@ -524,7 +470,6 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            backdrop-filter: blur(4px);
         }
         
         .modal.open {
@@ -540,18 +485,6 @@
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
         }
         
         .modal-header {
@@ -574,12 +507,6 @@
             color: #a0aec0;
             cursor: pointer;
             padding: 4px;
-            transition: all 0.3s;
-        }
-        
-        .modal-close:hover {
-            color: #4a5568;
-            transform: rotate(90deg);
         }
         
         /* Alert Styles */
@@ -600,25 +527,7 @@
             border-left: 4px solid #48bb78;
         }
         
-        .alert-warning {
-            background: #fffbeb;
-            color: #744210;
-            border-left: 4px solid #ed8936;
-        }
-        
-        .alert-error {
-            background: #fff5f5;
-            color: #742a2a;
-            border-left: 4px solid #e53e3e;
-        }
-        
-        .alert-info {
-            background: #ebf8ff;
-            color: #2c5282;
-            border-left: 4px solid #4299e1;
-        }
-        
-        /* Loading Spinner */
+        /* Spinner */
         .spinner {
             display: inline-block;
             width: 20px;
@@ -633,27 +542,14 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Responsive Styles */
-        @media (max-width: 1024px) {
-            .main-content {
-                padding: 24px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                gap: 16px;
-            }
-        }
-        
+        /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
-                width: 280px;
             }
             
             .sidebar.open {
                 transform: translateX(0);
-                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
             }
             
             .main-content {
@@ -674,32 +570,12 @@
                 gap: 12px;
             }
             
-            .stat-card {
-                padding: 16px;
-            }
-            
             .stat-value {
                 font-size: 24px;
             }
             
             .card {
                 padding: 16px;
-            }
-            
-            .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .modal-content {
-                padding: 20px;
-                margin: 10px;
-                max-height: 85vh;
-            }
-            
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
             }
         }
     </style>
@@ -743,6 +619,12 @@
                 </a>
             </li>
         </ul>
+        
+        <!-- Logout Button -->
+        <a href="/admin/logout" class="logout-link">
+            <span class="nav-icon">🚪</span>
+            Logout
+        </a>
     </div>
     
     <!-- Main Content -->
@@ -789,7 +671,7 @@
                 <div class="card-header">
                     <div>
                         <h2 class="card-title">Internet Packages</h2>
-                        <p class="card-subtitle">Manage your WiFi bundle offerings</p>
+                        <p class="card-subtitle">Manage your WiFi bundle offerings (Prices in KES)</p>
                     </div>
                     <button class="btn btn-primary" onclick="openPackageModal()">
                         + Add Package
@@ -801,7 +683,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Price</th>
+                                <th>Price (KES)</th>
                                 <th>Duration</th>
                                 <th>Download</th>
                                 <th>Upload</th>
@@ -818,7 +700,7 @@
                                     <br><small style="color: #a0aec0;">{{ package.description }}</small>
                                     {% endif %}
                                 </td>
-                                <td>${{ "%.2f"|format(package.price) }}</td>
+                                <td><strong>KES {{ "%.2f"|format(package.price) }}</strong></td>
                                 <td>{{ format_duration(package.duration_seconds) }}</td>
                                 <td>{{ package.download_rate_limit }}</td>
                                 <td>{{ package.upload_rate_limit }}</td>
@@ -858,7 +740,6 @@
                     </button>
                 </div>
                 
-                <!-- Active Account Alert -->
                 <div class="alert alert-success" id="activeGatewayAlert" style="display: none;">
                     <span>✓</span>
                     <div>
@@ -867,7 +748,6 @@
                     </div>
                 </div>
                 
-                <!-- Gateway Accounts Table -->
                 <div class="table-wrapper">
                     <table class="table">
                         <thead>
@@ -880,43 +760,35 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="gatewayAccountsBody">
-                            <!-- Dynamic content loaded via JavaScript -->
-                        </tbody>
+                        <tbody id="gatewayAccountsBody"></tbody>
                     </table>
                 </div>
                 
-                <!-- Gateway Settings -->
                 <div style="margin-top: 32px;">
                     <h3 style="margin-bottom: 16px; color: #2d3748; font-size: 18px;">Gateway Settings</h3>
                     <form id="gatewayConfigForm">
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
                             <div class="form-group">
                                 <label class="form-label">API Base URL</label>
-                                <input type="url" class="form-input" name="payhero_api_base_url" 
-                                       placeholder="https://api.payhero.co.ke" required>
+                                <input type="url" class="form-input" name="payhero_api_base_url" placeholder="https://api.payhero.co.ke" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Callback URL</label>
-                                <input type="url" class="form-input" name="payhero_callback_url" 
-                                       placeholder="https://your-backend.com/payment/callback" required>
+                                <input type="url" class="form-input" name="payhero_callback_url" placeholder="https://your-backend.com/payment/callback" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">API Timeout (seconds)</label>
-                                <input type="number" class="form-input" name="payhero_timeout" 
-                                       placeholder="30" min="5" max="120" required>
+                                <input type="number" class="form-input" name="payhero_timeout" placeholder="30" min="5" max="120" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Retry Attempts</label>
-                                <input type="number" class="form-input" name="payhero_retry_attempts" 
-                                       placeholder="3" min="1" max="10" required>
+                                <input type="number" class="form-input" name="payhero_retry_attempts" placeholder="3" min="1" max="10" required>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Save Settings</button>
                     </form>
                 </div>
                 
-                <!-- Recent Gateway Transactions -->
                 <div style="margin-top: 32px;">
                     <h3 style="margin-bottom: 16px; color: #2d3748; font-size: 18px;">Recent Gateway Transactions</h3>
                     <div class="table-wrapper">
@@ -928,9 +800,7 @@
                                     <th>Time</th>
                                 </tr>
                             </thead>
-                            <tbody id="gatewayLogsBody">
-                                <!-- Dynamic content loaded via JavaScript -->
-                            </tbody>
+                            <tbody id="gatewayLogsBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -945,15 +815,13 @@
                         <h2 class="card-title">Recent Transactions</h2>
                         <p class="card-subtitle">Monitor customer payment activity</p>
                     </div>
-                    <div style="display: flex; gap: 12px;">
-                        <select class="form-select" id="transactionStatusFilter" style="width: auto;" onchange="filterTransactions()">
-                            <option value="">All Statuses</option>
-                            <option value="SUCCESS">Successful</option>
-                            <option value="PENDING">Pending</option>
-                            <option value="FAILED">Failed</option>
-                            <option value="EXPIRED">Expired</option>
-                        </select>
-                    </div>
+                    <select class="form-select" id="transactionStatusFilter" style="width: auto;" onchange="filterTransactions()">
+                        <option value="">All Statuses</option>
+                        <option value="SUCCESS">Successful</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="FAILED">Failed</option>
+                        <option value="EXPIRED">Expired</option>
+                    </select>
                 </div>
                 
                 <div class="table-wrapper">
@@ -962,7 +830,7 @@
                             <tr>
                                 <th>Transaction ID</th>
                                 <th>Phone Number</th>
-                                <th>Amount</th>
+                                <th>Amount (KES)</th>
                                 <th>MAC Address</th>
                                 <th>Status</th>
                                 <th>Date</th>
@@ -977,7 +845,7 @@
                                     </code>
                                 </td>
                                 <td>{{ transaction.phone_number }}</td>
-                                <td><strong>${{ "%.2f"|format(transaction.amount) }}</strong></td>
+                                <td><strong>KES {{ "%.2f"|format(transaction.amount) }}</strong></td>
                                 <td>
                                     <code style="background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
                                         {{ transaction.mac_address }}
@@ -1012,8 +880,7 @@
                     {% if not setting.is_secret %}
                     <div class="form-group">
                         <label class="form-label">{{ setting.description or setting.setting_key }}</label>
-                        <input type="text" class="form-input" name="{{ setting.setting_key }}" 
-                               value="{{ setting.setting_value }}" required>
+                        <input type="text" class="form-input" name="{{ setting.setting_key }}" value="{{ setting.setting_value }}" required>
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -1035,27 +902,23 @@
                 
                 <div class="form-group">
                     <label class="form-label">Package Name *</label>
-                    <input type="text" class="form-input" id="packageName" required 
-                           placeholder="e.g., Daily Pass">
+                    <input type="text" class="form-input" id="packageName" required placeholder="e.g., Daily Pass">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Description</label>
-                    <textarea class="form-textarea" id="packageDescription" rows="3" 
-                              placeholder="Describe the package benefits..."></textarea>
+                    <textarea class="form-textarea" id="packageDescription" rows="3" placeholder="Describe the package benefits..."></textarea>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
-                        <label class="form-label">Price ($) *</label>
-                        <input type="number" class="form-input" id="packagePrice" 
-                               step="0.01" min="0.01" required placeholder="e.g., 3.00">
+                        <label class="form-label">Price (KES) *</label>
+                        <input type="number" class="form-input" id="packagePrice" step="0.01" min="1" required placeholder="e.g., 300">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Duration (seconds) *</label>
-                        <input type="number" class="form-input" id="packageDuration" 
-                               min="60" required placeholder="e.g., 86400">
+                        <input type="number" class="form-input" id="packageDuration" min="60" required placeholder="e.g., 86400">
                         <div class="form-hint">3600 = 1 hour, 86400 = 1 day</div>
                     </div>
                 </div>
@@ -1063,16 +926,12 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
                         <label class="form-label">Download Rate Limit *</label>
-                        <input type="text" class="form-input" id="packageDownload" 
-                               placeholder="e.g., 5M" pattern="^\d+[KMG]$" required>
-                        <div class="form-hint">Format: number + K/M/G (e.g., 5M)</div>
+                        <input type="text" class="form-input" id="packageDownload" placeholder="e.g., 5M" pattern="^\d+[KMG]$" required>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Upload Rate Limit *</label>
-                        <input type="text" class="form-input" id="packageUpload" 
-                               placeholder="e.g., 2M" pattern="^\d+[KMG]$" required>
-                        <div class="form-hint">Format: number + K/M/G (e.g., 2M)</div>
+                        <input type="text" class="form-input" id="packageUpload" placeholder="e.g., 2M" pattern="^\d+[KMG]$" required>
                     </div>
                 </div>
                 
@@ -1096,49 +955,42 @@
                 
                 <div class="form-group">
                     <label class="form-label">Account Name *</label>
-                    <input type="text" class="form-input" id="gatewayAccountName" 
-                           placeholder="e.g., Main Business Account" required>
+                    <input type="text" class="form-input" id="gatewayAccountName" placeholder="e.g., Main Business Account" required>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
                         <label class="form-label">API Key *</label>
-                        <input type="text" class="form-input" id="gatewayApiKey" 
-                               placeholder="Enter API Key" required>
+                        <input type="text" class="form-input" id="gatewayApiKey" placeholder="Enter API Key" required>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">API Secret *</label>
-                        <input type="password" class="form-input" id="gatewayApiSecret" 
-                               placeholder="Enter API Secret" required>
+                        <input type="password" class="form-input" id="gatewayApiSecret" placeholder="Enter API Secret" required>
                     </div>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
                         <label class="form-label">Shortcode</label>
-                        <input type="text" class="form-input" id="gatewayShortcode" 
-                               placeholder="e.g., 174379">
+                        <input type="text" class="form-input" id="gatewayShortcode" placeholder="e.g., 174379">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Account Number</label>
-                        <input type="text" class="form-input" id="gatewayAccountNumber" 
-                               placeholder="e.g., 1234567890">
+                        <input type="text" class="form-input" id="gatewayAccountNumber" placeholder="e.g., 1234567890">
                     </div>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
                         <label class="form-label">Business Number</label>
-                        <input type="text" class="form-input" id="gatewayBusinessNumber" 
-                               placeholder="e.g., 0712345678">
+                        <input type="text" class="form-input" id="gatewayBusinessNumber" placeholder="e.g., 0712345678">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Passkey</label>
-                        <input type="password" class="form-input" id="gatewayPasskey" 
-                               placeholder="Enter Passkey">
+                        <input type="password" class="form-input" id="gatewayPasskey" placeholder="Enter Passkey">
                     </div>
                 </div>
                 
@@ -1153,9 +1005,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">Priority</label>
-                        <input type="number" class="form-input" id="gatewayPriority" 
-                               value="0" min="0" max="100">
-                        <div class="form-hint">Higher priority = preferred account</div>
+                        <input type="number" class="form-input" id="gatewayPriority" value="0" min="0" max="100">
                     </div>
                 </div>
                 
@@ -1175,45 +1025,27 @@
     </div>
     
     <script>
-        // ============================================================================
         // Navigation Functions
-        // ============================================================================
-        
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
+            document.getElementById('sidebar').classList.toggle('open');
         }
         
         function navigateTo(section) {
-            // Hide all sections
-            const sections = [
-                'dashboard-section',
-                'packages-section',
-                'payment-gateway-section',
-                'transactions-section',
-                'settings-section'
-            ];
-            
+            const sections = ['dashboard-section', 'packages-section', 'payment-gateway-section', 'transactions-section', 'settings-section'];
             sections.forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
-            
-            // Show selected section
             document.getElementById(section + '-section').style.display = 'block';
             
-            // Update navigation
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
             });
-            
             event.target.closest('.nav-link').classList.add('active');
             
-            // Close sidebar on mobile
             if (window.innerWidth <= 768) {
                 toggleSidebar();
             }
             
-            // Load data for specific sections
             if (section === 'payment-gateway') {
                 loadPaymentGatewayAccounts();
                 loadPaymentGatewayConfigs();
@@ -1221,10 +1053,7 @@
             }
         }
         
-        // ============================================================================
-        // Package Management Functions
-        // ============================================================================
-        
+        // Package Management
         function openPackageModal(packageData = null) {
             const modal = document.getElementById('packageModal');
             modal.classList.add('open');
@@ -1249,7 +1078,6 @@
             document.getElementById('packageModal').classList.remove('open');
         }
         
-        // Package form submission
         document.getElementById('packageForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -1263,34 +1091,15 @@
                 upload_rate_limit: document.getElementById('packageUpload').value.trim().toUpperCase(),
             };
             
-            // Validate rate limits
-            const ratePattern = /^\d+[KMG]$/;
-            if (!ratePattern.test(formData.download_rate_limit)) {
-                alert('Download rate must be in format: number + K/M/G (e.g., 5M)');
-                return;
-            }
-            if (!ratePattern.test(formData.upload_rate_limit)) {
-                alert('Upload rate must be in format: number + K/M/G (e.g., 2M)');
-                return;
-            }
-            
-            // Disable submit button to prevent double submission
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span> Saving...';
+            const url = packageId ? `/admin/api/packages/${packageId}` : '/admin/api/packages';
+            const method = packageId ? 'PUT' : 'POST';
             
             try {
-                const url = packageId ? `/admin/api/packages/${packageId}` : '/admin/api/packages';
-                const method = packageId ? 'PUT' : 'POST';
-                
                 const response = await fetch(url, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
                 });
-                
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
@@ -1301,132 +1110,84 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error saving package. Please try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Package';
+                alert('Error saving package');
             }
         });
         
-        // Edit package
         async function editPackage(packageId) {
             try {
                 const response = await fetch(`/admin/api/packages/${packageId}`);
                 const data = await response.json();
-                
                 if (response.ok && data.success) {
                     openPackageModal(data.package);
-                } else {
-                    alert('Error loading package details');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error loading package details');
             }
         }
         
-        // Delete package
         async function deletePackage(packageId) {
-            if (!confirm('Are you sure you want to deactivate this package? It will no longer be available for purchase.')) {
-                return;
-            }
+            if (!confirm('Are you sure you want to deactivate this package?')) return;
             
             try {
-                const response = await fetch(`/admin/api/packages/${packageId}`, {
-                    method: 'DELETE',
-                });
-                
+                const response = await fetch(`/admin/api/packages/${packageId}`, { method: 'DELETE' });
                 const data = await response.json();
-                
                 if (response.ok && data.success) {
                     alert('Package deactivated successfully!');
                     location.reload();
-                } else {
-                    alert(data.detail || 'Error deactivating package');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error deactivating package');
             }
         }
         
-        // ============================================================================
-        // Payment Gateway Management Functions
-        // ============================================================================
-        
+        // Payment Gateway Functions
         let paymentGatewayAccounts = [];
         
-        // Load payment gateway accounts
         async function loadPaymentGatewayAccounts() {
             try {
                 const response = await fetch('/admin/payment-gateway/accounts');
                 const data = await response.json();
-                
                 if (data.success) {
                     paymentGatewayAccounts = data.accounts;
                     renderGatewayAccounts();
                     renderActiveGatewayInfo();
                 }
             } catch (error) {
-                console.error('Error loading payment gateway accounts:', error);
+                console.error('Error:', error);
             }
         }
         
-        // Render gateway accounts table
         function renderGatewayAccounts() {
             const tbody = document.getElementById('gatewayAccountsBody');
             
             if (paymentGatewayAccounts.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: #a0aec0;">
-                            No payment gateway accounts configured. Click "Add Account" to get started.
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #a0aec0;">No payment gateway accounts configured.</td></tr>';
                 return;
             }
             
             tbody.innerHTML = paymentGatewayAccounts.map(account => `
                 <tr>
-                    <td>
-                        <strong>${account.account_name}</strong>
-                        ${account.is_active ? '<span class="status-badge status-success" style="margin-left: 8px;">Active</span>' : ''}
-                    </td>
+                    <td><strong>${account.account_name}</strong>${account.is_active ? ' <span class="status-badge status-success">Active</span>' : ''}</td>
                     <td>${account.shortcode || account.account_number || '-'}</td>
-                    <td>
-                        <span class="status-badge status-${account.environment === 'production' ? 'success' : 'sandbox'}">
-                            ${account.environment}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="status-badge status-${account.last_test_status === 'SUCCESS' ? 'success' : 'failed'}">
-                            ${account.last_test_status || 'Not Tested'}
-                        </span>
-                    </td>
+                    <td><span class="status-badge status-${account.environment === 'production' ? 'success' : 'sandbox'}">${account.environment}</span></td>
+                    <td><span class="status-badge status-${account.last_test_status === 'SUCCESS' ? 'success' : 'failed'}">${account.last_test_status || 'Not Tested'}</span></td>
                     <td>${account.last_tested_at ? new Date(account.last_tested_at).toLocaleString() : '-'}</td>
                     <td>
-                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button class="btn btn-success btn-sm" onclick="testGatewayAccount(${account.id})" title="Test Connection">
-                                🔌
-                            </button>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn btn-success btn-sm" onclick="testGatewayAccount(${account.id})">🔌</button>
                             ${account.is_active ? 
-                                `<button class="btn btn-warning btn-sm" onclick="toggleGatewayAccount(${account.id})" title="Deactivate">⏸️</button>` :
-                                `<button class="btn btn-primary btn-sm" onclick="toggleGatewayAccount(${account.id})" title="Activate">▶️</button>`
+                                `<button class="btn btn-warning btn-sm" onclick="toggleGatewayAccount(${account.id})">⏸️</button>` :
+                                `<button class="btn btn-primary btn-sm" onclick="toggleGatewayAccount(${account.id})">▶️</button>`
                             }
-                            <button class="btn btn-primary btn-sm" onclick="editGatewayAccount(${account.id})" title="Edit">
-                                ✏️
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteGatewayAccount(${account.id})" title="Delete">
-                                🗑️
-                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="editGatewayAccount(${account.id})">✏️</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteGatewayAccount(${account.id})">🗑️</button>
                         </div>
                     </td>
                 </tr>
             `).join('');
         }
         
-        // Render active gateway info
         function renderActiveGatewayInfo() {
             const activeAccount = paymentGatewayAccounts.find(a => a.is_active);
             const alertDiv = document.getElementById('activeGatewayAlert');
@@ -1434,18 +1195,12 @@
             
             if (activeAccount) {
                 alertDiv.style.display = 'flex';
-                infoDiv.innerHTML = `
-                    <strong>${activeAccount.account_name}</strong> | 
-                    Shortcode: ${activeAccount.shortcode || activeAccount.account_number || 'N/A'} | 
-                    Environment: ${activeAccount.environment} | 
-                    Priority: ${activeAccount.priority}
-                `;
+                infoDiv.innerHTML = `<strong>${activeAccount.account_name}</strong> | Shortcode: ${activeAccount.shortcode || 'N/A'} | Environment: ${activeAccount.environment}`;
             } else {
                 alertDiv.style.display = 'none';
             }
         }
         
-        // Open gateway modal for adding/editing
         function openGatewayModal(accountData = null) {
             const modal = document.getElementById('gatewayModal');
             modal.classList.add('open');
@@ -1454,154 +1209,88 @@
                 document.getElementById('gatewayModalTitle').textContent = 'Edit PayHero Account';
                 document.getElementById('gatewayAccountId').value = accountData.id;
                 document.getElementById('gatewayAccountName').value = accountData.account_name;
-                document.getElementById('gatewayApiKey').value = '';
-                document.getElementById('gatewayApiSecret').value = '';
                 document.getElementById('gatewayShortcode').value = accountData.shortcode || '';
                 document.getElementById('gatewayAccountNumber').value = accountData.account_number || '';
                 document.getElementById('gatewayBusinessNumber').value = accountData.business_number || '';
-                document.getElementById('gatewayPasskey').value = '';
                 document.getElementById('gatewayEnvironment').value = accountData.environment;
                 document.getElementById('gatewayPriority').value = accountData.priority || 0;
                 document.getElementById('gatewayIsActive').checked = accountData.is_active;
-                
-                // Show hints about secrets
-                document.getElementById('gatewayApiKey').placeholder = 'Leave blank to keep existing';
-                document.getElementById('gatewayApiSecret').placeholder = 'Leave blank to keep existing';
-                document.getElementById('gatewayPasskey').placeholder = 'Leave blank to keep existing';
-                
-                // Make API key/secret optional for editing
                 document.getElementById('gatewayApiKey').required = false;
                 document.getElementById('gatewayApiSecret').required = false;
             } else {
                 document.getElementById('gatewayModalTitle').textContent = 'Add PayHero Account';
                 document.getElementById('gatewayForm').reset();
                 document.getElementById('gatewayAccountId').value = '';
-                document.getElementById('gatewayApiKey').placeholder = 'Enter API Key';
-                document.getElementById('gatewayApiSecret').placeholder = 'Enter API Secret';
-                document.getElementById('gatewayPasskey').placeholder = 'Enter Passkey';
-                document.getElementById('gatewayEnvironment').value = 'sandbox';
-                document.getElementById('gatewayPriority').value = 0;
-                
-                // Make API key/secret required for creating
                 document.getElementById('gatewayApiKey').required = true;
                 document.getElementById('gatewayApiSecret').required = true;
             }
         }
         
-        // Close gateway modal
         function closeGatewayModal() {
             document.getElementById('gatewayModal').classList.remove('open');
         }
         
-        // Edit gateway account
         function editGatewayAccount(accountId) {
             const account = paymentGatewayAccounts.find(a => a.id === accountId);
-            if (account) {
-                openGatewayModal(account);
-            }
+            if (account) openGatewayModal(account);
         }
         
-        // Test gateway account connection
         async function testGatewayAccount(accountId) {
-            if (!confirm('Test connection to this payment gateway account?')) {
-                return;
-            }
-            
-            const account = paymentGatewayAccounts.find(a => a.id === accountId);
-            alert(`Testing connection to ${account.account_name}... This may take a moment.`);
-            
             try {
-                const response = await fetch(`/admin/payment-gateway/accounts/${accountId}/test`, {
-                    method: 'POST'
-                });
+                const response = await fetch(`/admin/payment-gateway/accounts/${accountId}/test`, { method: 'POST' });
                 const data = await response.json();
-                
-                if (data.success) {
-                    alert(`Connection test successful!\n\n${data.message || ''}`);
-                    loadPaymentGatewayAccounts();
-                } else {
-                    alert(`Connection test failed: ${data.message || 'Unknown error'}`);
-                }
+                alert(data.success ? 'Connection test successful!' : `Connection test failed: ${data.message}`);
+                loadPaymentGatewayAccounts();
             } catch (error) {
-                console.error('Error testing connection:', error);
-                alert('Error testing connection. Please try again.');
+                alert('Error testing connection');
             }
         }
         
-        // Toggle gateway account active status
         async function toggleGatewayAccount(accountId) {
             const account = paymentGatewayAccounts.find(a => a.id === accountId);
             const action = account.is_active ? 'deactivate' : 'activate';
             
-            if (!confirm(`Are you sure you want to ${action} "${account.account_name}"?`)) {
-                return;
-            }
+            if (!confirm(`Are you sure you want to ${action} "${account.account_name}"?`)) return;
             
             try {
-                let url, method, body;
-                
-                if (account.is_active) {
-                    url = `/admin/payment-gateway/accounts/${accountId}/deactivate`;
-                    method = 'POST';
-                } else {
-                    url = `/admin/payment-gateway/accounts/${accountId}/activate`;
-                    method = 'POST';
-                }
-                
-                const response = await fetch(url, {
-                    method: method,
-                });
+                const url = `/admin/payment-gateway/accounts/${accountId}/${action}`;
+                const response = await fetch(url, { method: 'POST' });
                 const data = await response.json();
-                
                 if (data.success) {
                     alert(`Account ${action}d successfully!`);
                     loadPaymentGatewayAccounts();
-                } else {
-                    alert(`Failed to ${action} account: ${data.detail || data.message || 'Unknown error'}`);
                 }
             } catch (error) {
-                console.error(`Error ${action}ing account:`, error);
-                alert(`Error ${action}ing account. Please try again.`);
+                alert(`Error ${action}ing account`);
             }
         }
         
-        // Delete gateway account
         async function deleteGatewayAccount(accountId) {
-            const account = paymentGatewayAccounts.find(a => a.id === accountId);
-            
-            if (!confirm(`Are you sure you want to delete "${account.account_name}"? This action cannot be undone.`)) {
-                return;
-            }
+            if (!confirm('Are you sure you want to delete this account?')) return;
             
             try {
-                const response = await fetch(`/admin/payment-gateway/accounts/${accountId}`, {
-                    method: 'DELETE'
-                });
+                const response = await fetch(`/admin/payment-gateway/accounts/${accountId}`, { method: 'DELETE' });
                 const data = await response.json();
-                
                 if (data.success) {
                     alert('Account deleted successfully!');
                     loadPaymentGatewayAccounts();
-                } else {
-                    alert(`Failed to delete account: ${data.detail || data.message || 'Unknown error'}`);
                 }
             } catch (error) {
-                console.error('Error deleting account:', error);
-                alert('Error deleting account. Please try again.');
+                alert('Error deleting account');
             }
         }
         
-        // Gateway form submission
         document.getElementById('gatewayForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const accountId = document.getElementById('gatewayAccountId').value;
-            const formData = {};
+            const formData = {
+                account_name: document.getElementById('gatewayAccountName').value.trim(),
+                environment: document.getElementById('gatewayEnvironment').value,
+                priority: parseInt(document.getElementById('gatewayPriority').value) || 0,
+                is_active: document.getElementById('gatewayIsActive').checked,
+            };
             
-            // Add required fields
-            formData.account_name = document.getElementById('gatewayAccountName').value.trim();
-            
-            // Add optional fields (only if they have values)
             const apiKey = document.getElementById('gatewayApiKey').value.trim();
             const apiSecret = document.getElementById('gatewayApiSecret').value.trim();
             const shortcode = document.getElementById('gatewayShortcode').value.trim();
@@ -1616,234 +1305,115 @@
             if (businessNumber) formData.business_number = businessNumber;
             if (passkey) formData.passkey = passkey;
             
-            formData.environment = document.getElementById('gatewayEnvironment').value;
-            formData.priority = parseInt(document.getElementById('gatewayPriority').value) || 0;
-            formData.is_active = document.getElementById('gatewayIsActive').checked;
-            
-            // Validate required fields for new accounts
-            if (!accountId && (!apiKey || !apiSecret)) {
-                alert('API Key and API Secret are required for new accounts');
-                return;
-            }
-            
-            // Disable submit button
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span> Saving...';
+            const url = accountId ? `/admin/payment-gateway/accounts/${accountId}` : '/admin/payment-gateway/accounts';
+            const method = accountId ? 'PUT' : 'POST';
             
             try {
-                const url = accountId 
-                    ? `/admin/payment-gateway/accounts/${accountId}`
-                    : '/admin/payment-gateway/accounts';
-                const method = accountId ? 'PUT' : 'POST';
-                
                 const response = await fetch(url, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
                 });
                 const data = await response.json();
-                
                 if (data.success) {
-                    alert(`Payment gateway account ${accountId ? 'updated' : 'created'} successfully!`);
+                    alert('Account saved successfully!');
                     closeGatewayModal();
                     loadPaymentGatewayAccounts();
                 } else {
-                    alert(`Error: ${data.detail || data.message || 'Failed to save account'}`);
+                    alert(data.detail || 'Error saving account');
                 }
             } catch (error) {
-                console.error('Error saving gateway account:', error);
-                alert('Error saving gateway account. Please try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Account';
+                alert('Error saving account');
             }
         });
         
-        // Load payment gateway configs
         async function loadPaymentGatewayConfigs() {
             try {
                 const response = await fetch('/admin/payment-gateway/configs');
                 const data = await response.json();
-                
                 if (data.success) {
                     data.configs.forEach(config => {
                         const input = document.querySelector(`[name="${config.config_key}"]`);
-                        if (input) {
-                            input.value = config.config_value;
-                        }
+                        if (input) input.value = config.config_value;
                     });
                 }
             } catch (error) {
-                console.error('Error loading gateway configs:', error);
+                console.error('Error:', error);
             }
         }
         
-        // Gateway config form submission
         document.getElementById('gatewayConfigForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const formData = new FormData(this);
             const configs = [];
-            
             formData.forEach((value, key) => {
-                configs.push({
-                    config_key: key,
-                    config_value: value,
-                });
+                configs.push({ config_key: key, config_value: value });
             });
             
             try {
                 const response = await fetch('/admin/payment-gateway/configs/batch', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(configs),
                 });
-                
                 const data = await response.json();
-                
-                if (data.success) {
-                    alert(`Payment gateway settings saved successfully! Updated ${data.updated_count} configurations.`);
-                } else {
-                    alert('Error saving payment gateway settings');
-                }
+                alert(data.success ? 'Settings saved!' : 'Error saving settings');
             } catch (error) {
-                console.error('Error saving gateway configs:', error);
-                alert('Error saving payment gateway settings. Please try again.');
+                alert('Error saving settings');
             }
         });
         
-        // Load payment gateway logs
         async function loadPaymentGatewayLogs() {
             try {
                 const response = await fetch('/admin/payment-gateway/logs?limit=10');
                 const data = await response.json();
-                
                 if (data.success) {
                     const tbody = document.getElementById('gatewayLogsBody');
-                    
                     if (data.logs.length === 0) {
-                        tbody.innerHTML = `
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #a0aec0;">No transactions logged yet</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.logs.map(log => `
                             <tr>
-                                <td colspan="3" style="text-align: center; padding: 20px; color: #a0aec0;">
-                                    No transactions logged yet
-                                </td>
+                                <td>${log.transaction_id ? log.transaction_id.substring(0, 8) + '...' : '-'}</td>
+                                <td><span class="status-badge status-${log.status ? log.status.toLowerCase() : 'pending'}">${log.status || 'Unknown'}</span></td>
+                                <td>${new Date(log.created_at).toLocaleString()}</td>
                             </tr>
-                        `;
-                        return;
+                        `).join('');
                     }
-                    
-                    tbody.innerHTML = data.logs.map(log => `
-                        <tr>
-                            <td>
-                                <code style="background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
-                                    ${log.transaction_id ? log.transaction_id.substring(0, 8) + '...' : '-'}
-                                </code>
-                            </td>
-                            <td>
-                                <span class="status-badge status-${log.status ? log.status.toLowerCase() : 'pending'}">
-                                    ${log.status || 'Unknown'}
-                                </span>
-                            </td>
-                            <td>${new Date(log.created_at).toLocaleString()}</td>
-                        </tr>
-                    `).join('');
                 }
             } catch (error) {
-                console.error('Error loading gateway logs:', error);
+                console.error('Error:', error);
             }
         }
         
-        // ============================================================================
-        // Transaction Functions
-        // ============================================================================
-        
-        async function filterTransactions() {
+        function filterTransactions() {
             const status = document.getElementById('transactionStatusFilter').value;
-            
-            try {
-                const url = status ? `/admin/api/transactions?status=${status}` : '/admin/api/transactions';
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Update table with filtered transactions
-                    // This would require re-rendering the table with JavaScript
-                    // For simplicity, we'll reload the page with a query parameter
-                    window.location.href = status ? `?transaction_status=${status}` : window.location.pathname;
-                }
-            } catch (error) {
-                console.error('Error filtering transactions:', error);
-            }
+            window.location.href = status ? `?transaction_status=${status}` : window.location.pathname;
         }
-        
-        // ============================================================================
-        // Settings Functions
-        // ============================================================================
         
         document.getElementById('settingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const formData = new FormData(this);
-            const settings = {};
-            
-            formData.forEach((value, key) => {
-                settings[key] = value;
-            });
             
             try {
-                for (const [key, value] of Object.entries(settings)) {
-                    const response = await fetch('/admin/api/settings', {
+                for (const [key, value] of formData.entries()) {
+                    await fetch('/admin/api/settings', {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            setting_key: key,
-                            setting_value: value,
-                        }),
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ setting_key: key, setting_value: value }),
                     });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Failed to update ${key}`);
-                    }
                 }
-                
                 alert('Settings saved successfully!');
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error saving settings. Please try again.');
+                alert('Error saving settings');
             }
         });
         
-        // ============================================================================
-        // Initialization
-        // ============================================================================
-        
-        // Load initial data
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Show dashboard by default
             document.getElementById('dashboard-section').style.display = 'block';
-            
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', function(event) {
-                const sidebar = document.getElementById('sidebar');
-                const menuBtn = document.querySelector('.mobile-menu-btn');
-                
-                if (window.innerWidth <= 768 && 
-                    sidebar.classList.contains('open') && 
-                    !sidebar.contains(event.target) && 
-                    !menuBtn.contains(event.target)) {
-                    sidebar.classList.remove('open');
-                }
-            });
         });
         
-        // Close modals when clicking outside
         document.addEventListener('click', function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.classList.remove('open');

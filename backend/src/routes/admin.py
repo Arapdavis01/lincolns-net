@@ -1,15 +1,24 @@
 """
 Lincoln's net - Admin Routes
 Admin dashboard and management endpoints with PayHero/Safaricom configuration
+Includes custom login page and session management
 """
 
-from fastapi import APIRouter, Request, Depends, HTTPException, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import APIRouter, Request, Depends, HTTPException, BackgroundTasks, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc, or_
 from config.database import get_db
-from src.auth.admin_auth import get_admin_session
+from src.auth.admin_auth import (
+    get_admin_session,
+    verify_admin_login,
+    create_admin_session_response,
+    clear_admin_session_response,
+    get_client_ip,
+    get_admin_from_request,
+    auth_manager,
+)
 from src.models.payment_gateway import (
     PaymentGatewayAccount, 
     PaymentGatewayConfig, 
@@ -28,16 +37,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+# Currency symbol for display
+CURRENCY_SYMBOL = "KES"
+
 
 # ============================================================================
 # Pydantic Models for Request Validation
 # ============================================================================
 
+class LoginRequest(BaseModel):
+    """Model for admin login."""
+    username: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=1, max_length=255)
+
+
 class PackageCreate(BaseModel):
     """Model for creating a new internet package."""
     name: str = Field(..., min_length=1, max_length=255, description="Package name")
     description: Optional[str] = Field(None, max_length=500, description="Package description")
-    price: float = Field(..., gt=0, description="Package price in USD")
+    price: float = Field(..., gt=0, description="Package price in KES")
     duration_seconds: int = Field(..., gt=0, description="Duration in seconds")
     download_rate_limit: str = Field(..., pattern=r'^\d+[KMG]$', description="Download rate (e.g., 5M)")
     upload_rate_limit: str = Field(..., pattern=r'^\d+[KMG]$', description="Upload rate (e.g., 2M)")
@@ -47,6 +65,8 @@ class PackageCreate(BaseModel):
         """Validate price has max 2 decimal places."""
         if round(v, 2) != v:
             raise ValueError('Price must have at most 2 decimal places')
+        if v < 1:
+            raise ValueError('Price must be at least 1 KES')
         return v
     
     @validator('duration_seconds')
@@ -141,6 +161,75 @@ class DashboardStats(BaseModel):
 
 
 # ============================================================================
+# Authentication Routes
+# ============================================================================
+
+@router.get("/login", response_class=HTMLResponse)
+async def admin_login_page(request: Request):
+    """
+    Render custom admin login page.
+    """
+    # Check if already logged in
+    if get_admin_from_request(request):
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
+    
+    return templates.TemplateResponse(
+        "admin_login.html",
+        {
+            "request": request,
+            "app_name": "Lincoln's net Administration",
+        }
+    )
+
+
+@router.post("/api/login", response_class=JSONResponse)
+async def admin_login(
+    request: Request,
+    login_data: LoginRequest,
+):
+    """
+    API endpoint for admin login.
+    """
+    ip_address = get_client_ip(request)
+    
+    success, message = verify_admin_login(
+        request,
+        login_data.username,
+        login_data.password,
+        ip_address
+    )
+    
+    if success:
+        # Create session
+        session_token = auth_manager.create_session(login_data.username)
+        
+        return {
+            "success": True,
+            "message": message,
+            "redirect_url": "/admin/dashboard",
+            "session_token": session_token,
+        }
+    else:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "success": False,
+                "message": message,
+            }
+        )
+
+
+@router.get("/logout")
+async def admin_logout():
+    """
+    Logout admin user.
+    """
+    response = RedirectResponse(url="/admin/login", status_code=302)
+    response.delete_cookie("admin_session")
+    return response
+
+
+# ============================================================================
 # Dashboard Routes
 # ============================================================================
 
@@ -148,12 +237,14 @@ class DashboardStats(BaseModel):
 async def admin_dashboard(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """
     Admin dashboard with CRUD operations and payment gateway configuration.
-    Protected by HTTP Basic Authentication.
     """
+    # Check if admin is authenticated
+    if not get_admin_from_request(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
     try:
         # Fetch comprehensive statistics
         stats = await get_dashboard_stats(db)
@@ -196,13 +287,14 @@ async def admin_dashboard(
             {
                 "request": request,
                 "app_name": "Lincoln's net Administration Console",
+                "currency": CURRENCY_SYMBOL,
                 "stats": {
                     "total_packages": stats.total_packages,
                     "active_packages": stats.active_packages,
                     "total_transactions": stats.total_transactions,
                     "active_transactions": stats.active_transactions,
-                    "total_revenue": f"${stats.total_revenue:.2f}",
-                    "today_revenue": f"${stats.today_revenue:.2f}",
+                    "total_revenue": f"{CURRENCY_SYMBOL} {stats.total_revenue:,.2f}",
+                    "today_revenue": f"{CURRENCY_SYMBOL} {stats.today_revenue:,.2f}",
                     "total_customers": stats.total_customers,
                     "active_customers": stats.active_customers,
                 },
@@ -285,7 +377,6 @@ async def get_dashboard_stats(db: AsyncSession) -> DashboardStats:
 @router.get("/api/packages", response_class=JSONResponse)
 async def get_packages(
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get all internet packages."""
     try:
@@ -297,7 +388,8 @@ async def get_packages(
         return {
             "success": True,
             "packages": [pkg.to_dict() for pkg in packages],
-            "total": len(packages)
+            "total": len(packages),
+            "currency": CURRENCY_SYMBOL,
         }
         
     except Exception as e:
@@ -309,7 +401,6 @@ async def get_packages(
 async def create_package(
     package_data: PackageCreate,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Create a new internet package."""
     try:
@@ -335,7 +426,7 @@ async def create_package(
         await db.commit()
         await db.refresh(package)
         
-        logger.info(f"Package created: {package.name} (ID: {package.id})")
+        logger.info(f"Package created: {package.name} (ID: {package.id}) - {CURRENCY_SYMBOL} {package.price}")
         return {
             "success": True,
             "package": package.to_dict(),
@@ -354,7 +445,6 @@ async def create_package(
 async def get_package(
     package_id: int,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get a specific internet package."""
     try:
@@ -383,7 +473,6 @@ async def update_package(
     package_id: int,
     package_data: PackageUpdate,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Update an existing internet package."""
     try:
@@ -435,7 +524,6 @@ async def update_package(
 async def delete_package(
     package_id: int,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Delete (soft delete) an internet package."""
     try:
@@ -480,7 +568,6 @@ async def get_transactions(
     limit: int = 50,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get billing transactions with filters."""
     try:
@@ -524,7 +611,8 @@ async def get_transactions(
             "transactions": [t.to_dict() for t in transactions],
             "total": total_count or 0,
             "limit": limit,
-            "offset": offset
+            "offset": offset,
+            "currency": CURRENCY_SYMBOL,
         }
         
     except HTTPException:
@@ -538,7 +626,6 @@ async def get_transactions(
 async def get_transaction(
     transaction_id: str,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get a specific transaction."""
     try:
@@ -569,7 +656,6 @@ async def get_transaction(
 @router.get("/api/settings", response_class=JSONResponse)
 async def get_settings(
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get system settings."""
     try:
@@ -591,7 +677,6 @@ async def get_settings(
 async def update_setting(
     setting_data: SettingUpdate,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Update system setting."""
     try:
@@ -629,7 +714,6 @@ async def update_setting(
 @router.get("/payment-gateway/accounts", response_class=JSONResponse)
 async def get_payment_gateway_accounts(
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get all payment gateway accounts."""
     try:
@@ -655,7 +739,6 @@ async def get_payment_gateway_accounts(
 async def get_payment_gateway_account(
     account_id: int,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get a specific payment gateway account."""
     try:
@@ -684,7 +767,6 @@ async def create_payment_gateway_account(
     account_data: PayHeroAccountCreate,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Create a new PayHero payment gateway account."""
     try:
@@ -739,7 +821,6 @@ async def update_payment_gateway_account(
     account_id: int,
     account_data: PayHeroAccountUpdate,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Update a PayHero payment gateway account."""
     try:
@@ -793,7 +874,6 @@ async def update_payment_gateway_account(
 async def delete_payment_gateway_account(
     account_id: int,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Delete a PayHero payment gateway account."""
     try:
@@ -842,7 +922,6 @@ async def delete_payment_gateway_account(
 async def test_payment_gateway_account(
     account_id: int,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Test connection to a PayHero payment gateway account."""
     try:
@@ -871,7 +950,6 @@ async def test_payment_gateway_account(
 async def activate_payment_gateway_account(
     account_id: int,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Activate a PayHero payment gateway account (deactivates others)."""
     try:
@@ -914,7 +992,6 @@ async def activate_payment_gateway_account(
 async def deactivate_payment_gateway_account(
     account_id: int,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Deactivate a PayHero payment gateway account."""
     try:
@@ -965,7 +1042,6 @@ async def deactivate_payment_gateway_account(
 @router.get("/payment-gateway/configs", response_class=JSONResponse)
 async def get_payment_gateway_configs(
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get PayHero payment gateway configurations."""
     try:
@@ -987,44 +1063,10 @@ async def get_payment_gateway_configs(
         raise HTTPException(status_code=500, detail="Failed to fetch payment gateway configurations")
 
 
-@router.get("/payment-gateway/configs/{config_key}", response_class=JSONResponse)
-async def get_payment_gateway_config(
-    config_key: str,
-    db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
-):
-    """Get a specific PayHero payment gateway configuration."""
-    try:
-        result = await db.execute(
-            select(PaymentGatewayConfig).where(
-                and_(
-                    PaymentGatewayConfig.config_key == config_key,
-                    PaymentGatewayConfig.gateway_type == 'payhero'
-                )
-            )
-        )
-        config = result.scalar_one_or_none()
-        
-        if not config:
-            raise HTTPException(status_code=404, detail="Configuration not found")
-        
-        return {
-            "success": True,
-            "config": config.to_dict()
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching payment gateway config: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to fetch configuration")
-
-
 @router.put("/payment-gateway/configs", response_class=JSONResponse)
 async def update_payment_gateway_config(
     config_data: PayHeroConfigUpdate,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Update PayHero payment gateway configuration."""
     try:
@@ -1065,7 +1107,6 @@ async def update_payment_gateway_config(
 async def update_payment_gateway_configs_batch(
     configs: List[PayHeroConfigUpdate],
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Update multiple PayHero payment gateway configurations in batch."""
     try:
@@ -1109,7 +1150,6 @@ async def get_payment_gateway_logs(
     status: Optional[str] = None,
     transaction_id: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get PayHero payment gateway transaction logs."""
     try:
@@ -1143,38 +1183,9 @@ async def get_payment_gateway_logs(
         raise HTTPException(status_code=500, detail="Failed to fetch payment gateway logs")
 
 
-@router.get("/payment-gateway/logs/{log_id}", response_class=JSONResponse)
-async def get_payment_gateway_log(
-    log_id: int,
-    db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
-):
-    """Get a specific PayHero payment gateway log."""
-    try:
-        result = await db.execute(
-            select(PaymentGatewayLog).where(PaymentGatewayLog.id == log_id)
-        )
-        log = result.scalar_one_or_none()
-        
-        if not log:
-            raise HTTPException(status_code=404, detail="Log not found")
-        
-        return {
-            "success": True,
-            "log": log.to_dict()
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching payment gateway log: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to fetch log")
-
-
 @router.get("/payment-gateway/summary", response_class=JSONResponse)
 async def get_payment_gateway_summary(
     db: AsyncSession = Depends(get_db),
-    authenticated: bool = Depends(get_admin_session)
 ):
     """Get payment gateway summary statistics."""
     try:
@@ -1206,14 +1217,6 @@ async def get_payment_gateway_summary(
             .where(PaymentGatewayLog.status == 'FAILED')
         )
         
-        # Get recent activity
-        recent_logs = await db.execute(
-            select(PaymentGatewayLog)
-            .order_by(desc(PaymentGatewayLog.created_at))
-            .limit(5)
-        )
-        recent_logs_data = recent_logs.scalars().all()
-        
         return {
             "success": True,
             "summary": {
@@ -1222,7 +1225,6 @@ async def get_payment_gateway_summary(
                 "successful_transactions": successful_transactions or 0,
                 "failed_transactions": failed_transactions or 0,
                 "success_rate": round((successful_transactions / total_transactions * 100) if total_transactions else 0, 2),
-                "recent_activity": [log.to_dict() for log in recent_logs_data]
             }
         }
         

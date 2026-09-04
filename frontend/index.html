@@ -2,168 +2,202 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
     <title>Lincoln's net - WiFi Access</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 24px;
-            padding: 40px 24px;
-            max-width: 480px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 36px;
-        }
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 8px;
-        }
-        .subtitle {
-            font-size: 16px;
-            color: #718096;
-            margin-bottom: 24px;
-        }
-        .package {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            margin: 12px 0;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .package.selected {
-            border-color: #667eea;
-            background: #f7fafc;
-        }
-        .package-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 4px;
-        }
-        .package-price {
-            font-size: 20px;
-            font-weight: 700;
-            color: #667eea;
-        }
-        .package-details {
-            font-size: 12px;
-            color: #718096;
-            margin-top: 4px;
-        }
-        input {
-            width: 100%;
-            padding: 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            margin: 16px 0;
-            outline: none;
-        }
-        input:focus {
-            border-color: #667eea;
-        }
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .footer {
-            font-size: 12px;
-            margin-top: 20px;
-            color: #a0aec0;
-        }
-    </style>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="logo">📶</div>
-        <h1>Lincoln's net</h1>
-        <p class="subtitle">Fast, Reliable WiFi Access</p>
-        
-        <div class="package" onclick="selectPackage(this, 1)">
-            <div class="package-name">Hourly Pass</div>
-            <div class="package-price">KES 100</div>
-            <div class="package-details">1 hour | 5M download | 2M upload</div>
+    <div class="portal-container">
+        <div class="portal-card">
+            <!-- Header -->
+            <div class="portal-header">
+                <div class="portal-logo">
+                    <i class="fas fa-wifi"></i>
+                </div>
+                <h1 class="portal-title">Lincoln's net</h1>
+                <p class="portal-subtitle">Fast, Reliable WiFi Access</p>
+            </div>
+            
+            <!-- Packages -->
+            <div class="packages-list">
+                <div class="package-card" onclick="selectPackage(this, 1)">
+                    <div class="package-header">
+                        <div class="package-name">
+                            <i class="fas fa-clock"></i> Hourly Pass
+                        </div>
+                        <div class="package-price">
+                            <i class="fas fa-money-bill-wave"></i> KES 100
+                        </div>
+                    </div>
+                    <div class="package-details">
+                        <span class="package-badge">
+                            <i class="fas fa-hourglass-half"></i> 1 hour
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-download"></i> 5M
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-upload"></i> 2M
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="package-card" onclick="selectPackage(this, 2)">
+                    <div class="package-header">
+                        <div class="package-name">
+                            <i class="fas fa-sun"></i> Daily Pass
+                        </div>
+                        <div class="package-price">
+                            <i class="fas fa-money-bill-wave"></i> KES 300
+                        </div>
+                    </div>
+                    <div class="package-details">
+                        <span class="package-badge">
+                            <i class="fas fa-hourglass-half"></i> 24 hours
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-download"></i> 10M
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-upload"></i> 5M
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="package-card" onclick="selectPackage(this, 3)">
+                    <div class="package-header">
+                        <div class="package-name">
+                            <i class="fas fa-calendar-week"></i> Weekly Pass
+                        </div>
+                        <div class="package-price">
+                            <i class="fas fa-money-bill-wave"></i> KES 1,500
+                        </div>
+                    </div>
+                    <div class="package-details">
+                        <span class="package-badge">
+                            <i class="fas fa-hourglass-half"></i> 7 days
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-download"></i> 20M
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-upload"></i> 10M
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="package-card" onclick="selectPackage(this, 4)">
+                    <div class="package-header">
+                        <div class="package-name">
+                            <i class="fas fa-calendar-check"></i> Monthly Pass
+                        </div>
+                        <div class="package-price">
+                            <i class="fas fa-money-bill-wave"></i> KES 5,000
+                        </div>
+                    </div>
+                    <div class="package-details">
+                        <span class="package-badge">
+                            <i class="fas fa-hourglass-half"></i> 30 days
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-download"></i> 50M
+                        </span>
+                        <span class="package-badge">
+                            <i class="fas fa-upload"></i> 25M
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phone Input -->
+            <div class="phone-input-group">
+                <label class="phone-label" for="phoneNumber">
+                    <i class="fas fa-mobile-alt"></i> Phone Number (M-Pesa)
+                </label>
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-phone"></i>
+                    </span>
+                    <input 
+                        type="tel" 
+                        id="phoneNumber" 
+                        class="phone-input" 
+                        placeholder="e.g., 0712345678" 
+                        maxlength="10"
+                        pattern="[0-9]{10}"
+                        inputmode="numeric"
+                        required
+                    >
+                </div>
+            </div>
+            
+            <!-- Connect Button -->
+            <button class="connect-btn" onclick="connectNow()" id="connectButton">
+                <i class="fas fa-plug"></i> Connect Now
+            </button>
+            
+            <!-- Loading State -->
+            <div id="loadingState" style="display: none; margin-top: 16px;">
+                <div class="spinner"></div>
+                <p style="color: #718096; margin-top: 8px;">Processing payment...</p>
+            </div>
+            
+            <!-- Footer -->
+            <div class="portal-footer">
+                <i class="fas fa-shield-alt"></i> Secure payment via M-Pesa | 
+                <i class="fas fa-wifi"></i> Powered by Lincoln's net
+            </div>
         </div>
-        
-        <div class="package" onclick="selectPackage(this, 2)">
-            <div class="package-name">Daily Pass</div>
-            <div class="package-price">KES 300</div>
-            <div class="package-details">24 hours | 10M download | 5M upload</div>
-        </div>
-        
-        <div class="package" onclick="selectPackage(this, 3)">
-            <div class="package-name">Weekly Pass</div>
-            <div class="package-price">KES 1,500</div>
-            <div class="package-details">7 days | 20M download | 10M upload</div>
-        </div>
-        
-        <div class="package" onclick="selectPackage(this, 4)">
-            <div class="package-name">Monthly Pass</div>
-            <div class="package-price">KES 5,000</div>
-            <div class="package-details">30 days | 50M download | 25M upload</div>
-        </div>
-        
-        <input type="tel" id="phoneNumber" placeholder="Phone Number (M-Pesa)" maxlength="10">
-        
-        <button onclick="connectNow()">Connect Now</button>
-        
-        <div class="footer">Secure payment via M-Pesa | Powered by Lincoln's net</div>
     </div>
     
     <script>
+        const BACKEND_URL = 'https://lincolns-net-backend.onrender.com';
         let selectedPackageId = null;
         
+        /**
+         * Select a package
+         */
         function selectPackage(element, packageId) {
-            document.querySelectorAll('.package').forEach(p => {
+            // Remove selection from all packages
+            document.querySelectorAll('.package-card').forEach(p => {
                 p.classList.remove('selected');
             });
+            
+            // Add selection to clicked package
             element.classList.add('selected');
             selectedPackageId = packageId;
         }
         
-        function connectNow() {
+        /**
+         * Connect to WiFi after payment
+         */
+        async function connectNow() {
             const phoneNumber = document.getElementById('phoneNumber').value;
+            const connectButton = document.getElementById('connectButton');
+            const loadingState = document.getElementById('loadingState');
             
+            // Validate package selection
             if (!selectedPackageId) {
-                alert('Please select a package');
+                showAlert('Please select a package', 'warning');
                 return;
             }
             
+            // Validate phone number
             if (!phoneNumber || phoneNumber.length < 10) {
-                alert('Please enter a valid phone number');
+                showAlert('Please enter a valid 10-digit phone number', 'warning');
                 return;
             }
+            
+            // Disable button and show loading
+            connectButton.disabled = true;
+            connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            loadingState.style.display = 'block';
             
             // Get URL parameters from MikroTik
             const urlParams = new URLSearchParams(window.location.search);
@@ -171,32 +205,123 @@
             const ip = urlParams.get('ip') || '';
             const linkLoginOnly = urlParams.get('link_login_only') || '';
             
-            // Send to backend
-            fetch('https://lincolns-net-backend.onrender.com/pay', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    package_id: selectedPackageId,
-                    phone_number: phoneNumber,
-                    mac: mac,
-                    ip: ip,
-                    link_login_only: linkLoginOnly,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.redirect_url) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/pay`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        package_id: selectedPackageId,
+                        phone_number: phoneNumber,
+                        mac: mac,
+                        ip: ip,
+                        link_login_only: linkLoginOnly,
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.redirect_url) {
+                    // Redirect to payment gateway or success page
                     window.location.href = data.redirect_url;
+                } else if (response.ok) {
+                    // Payment initiated
+                    showAlert('Payment initiated! Check your phone for M-Pesa prompt.', 'success');
+                    
+                    // Check payment status after 5 seconds
+                    setTimeout(() => checkPaymentStatus(data.transaction_id), 5000);
                 } else {
-                    alert('Payment initiated! Check your phone for M-Pesa prompt.');
+                    showAlert(data.detail || 'Payment initiation failed', 'error');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
-                alert('Error connecting to payment service');
-            });
+                showAlert('Error connecting to payment service. Please try again.', 'error');
+            } finally {
+                // Re-enable button
+                connectButton.disabled = false;
+                connectButton.innerHTML = '<i class="fas fa-plug"></i> Connect Now';
+                loadingState.style.display = 'none';
+            }
+        }
+        
+        /**
+         * Check payment status
+         */
+        async function checkPaymentStatus(transactionId) {
+            if (!transactionId) return;
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/payment/status/${transactionId}`);
+                const data = await response.json();
+                
+                if (data.status === 'SUCCESS') {
+                    showAlert('Payment successful! Connecting you to WiFi...', 'success');
+                    
+                    // Redirect to success page
+                    setTimeout(() => {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        window.location.href = `${BACKEND_URL}/success?${urlParams.toString()}`;
+                    }, 2000);
+                } else if (data.status === 'FAILED') {
+                    showAlert('Payment failed. Please try again.', 'error');
+                } else {
+                    // Still pending, check again
+                    setTimeout(() => checkPaymentStatus(transactionId), 5000);
+                }
+            } catch (error) {
+                console.error('Error checking payment:', error);
+            }
+        }
+        
+        /**
+         * Show alert message
+         */
+        function showAlert(message, type = 'info') {
+            // Remove existing alert
+            const existingAlert = document.querySelector('.portal-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // Create alert element
+            const alert = document.createElement('div');
+            alert.className = `portal-alert portal-alert-${type}`;
+            alert.innerHTML = `
+                <i class="fas fa-${getAlertIcon(type)}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Insert after connect button
+            const connectButton = document.getElementById('connectButton');
+            connectButton.parentNode.insertBefore(alert, connectButton.nextSibling);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+        
+        /**
+         * Get alert icon
+         */
+        function getAlertIcon(type) {
+            switch (type) {
+                case 'success': return 'check-circle';
+                case 'error': return 'exclamation-circle';
+                case 'warning': return 'exclamation-triangle';
+                default: return 'info-circle';
+            }
+        }
+        
+        // Auto-select first package on mobile
+        if (window.innerWidth <= 480) {
+            const firstPackage = document.querySelector('.package-card');
+            if (firstPackage) {
+                selectPackage(firstPackage, 1);
+            }
         }
     </script>
 </body>

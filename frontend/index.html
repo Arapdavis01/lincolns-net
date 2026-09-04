@@ -41,7 +41,7 @@
             color: #2d3748;
             margin-bottom: 8px;
         }
-        p {
+        .subtitle {
             font-size: 16px;
             color: #718096;
             margin-bottom: 24px;
@@ -69,6 +69,11 @@
             font-weight: 700;
             color: #667eea;
         }
+        .package-details {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
         input {
             width: 100%;
             padding: 16px;
@@ -76,6 +81,10 @@
             border-radius: 12px;
             font-size: 16px;
             margin: 16px 0;
+            outline: none;
+        }
+        input:focus {
+            border-color: #667eea;
         }
         button {
             width: 100%;
@@ -99,39 +108,95 @@
     <div class="container">
         <div class="logo">📶</div>
         <h1>Lincoln's net</h1>
-        <p>Fast, Reliable WiFi Access</p>
+        <p class="subtitle">Fast, Reliable WiFi Access</p>
         
-        <div class="package" onclick="selectPackage(this)">
+        <div class="package" onclick="selectPackage(this, 1)">
             <div class="package-name">Hourly Pass</div>
-            <div class="package-price">$1.00</div>
-            <small>1 hour | 5M download | 2M upload</small>
+            <div class="package-price">KES 100</div>
+            <div class="package-details">1 hour | 5M download | 2M upload</div>
         </div>
         
-        <div class="package" onclick="selectPackage(this)">
+        <div class="package" onclick="selectPackage(this, 2)">
             <div class="package-name">Daily Pass</div>
-            <div class="package-price">$3.00</div>
-            <small>24 hours | 10M download | 5M upload</small>
+            <div class="package-price">KES 300</div>
+            <div class="package-details">24 hours | 10M download | 5M upload</div>
         </div>
         
-        <div class="package" onclick="selectPackage(this)">
+        <div class="package" onclick="selectPackage(this, 3)">
             <div class="package-name">Weekly Pass</div>
-            <div class="package-price">$15.00</div>
-            <small>7 days | 20M download | 10M upload</small>
+            <div class="package-price">KES 1,500</div>
+            <div class="package-details">7 days | 20M download | 10M upload</div>
         </div>
         
-        <input type="tel" placeholder="Phone Number (M-Pesa)" maxlength="10">
+        <div class="package" onclick="selectPackage(this, 4)">
+            <div class="package-name">Monthly Pass</div>
+            <div class="package-price">KES 5,000</div>
+            <div class="package-details">30 days | 50M download | 25M upload</div>
+        </div>
         
-        <button onclick="alert('Connecting...')">Connect Now</button>
+        <input type="tel" id="phoneNumber" placeholder="Phone Number (M-Pesa)" maxlength="10">
+        
+        <button onclick="connectNow()">Connect Now</button>
         
         <div class="footer">Secure payment via M-Pesa | Powered by Lincoln's net</div>
     </div>
     
     <script>
-        function selectPackage(element) {
+        let selectedPackageId = null;
+        
+        function selectPackage(element, packageId) {
             document.querySelectorAll('.package').forEach(p => {
                 p.classList.remove('selected');
             });
             element.classList.add('selected');
+            selectedPackageId = packageId;
+        }
+        
+        function connectNow() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            
+            if (!selectedPackageId) {
+                alert('Please select a package');
+                return;
+            }
+            
+            if (!phoneNumber || phoneNumber.length < 10) {
+                alert('Please enter a valid phone number');
+                return;
+            }
+            
+            // Get URL parameters from MikroTik
+            const urlParams = new URLSearchParams(window.location.search);
+            const mac = urlParams.get('mac') || '';
+            const ip = urlParams.get('ip') || '';
+            const linkLoginOnly = urlParams.get('link_login_only') || '';
+            
+            // Send to backend
+            fetch('https://lincolns-net-backend.onrender.com/pay', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    package_id: selectedPackageId,
+                    phone_number: phoneNumber,
+                    mac: mac,
+                    ip: ip,
+                    link_login_only: linkLoginOnly,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert('Payment initiated! Check your phone for M-Pesa prompt.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error connecting to payment service');
+            });
         }
     </script>
 </body>

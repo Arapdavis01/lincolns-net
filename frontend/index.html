@@ -19,14 +19,17 @@
     <header class="portal-header-bar">
         <div class="header-content">
             <div class="logo-area">
-                <div class="logo-box">
-                    <i class="fas fa-wifi"></i>
-                </div>
+                <div class="logo-box"><i class="fas fa-wifi"></i></div>
                 <h1>LINCOLN'S NET</h1>
             </div>
-            <a href="#" class="paid-link" onclick="checkAlreadyPaid(event)">
-                <i class="fas fa-check-circle"></i> Already Paid? Click Here
-            </a>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="#" class="paid-link" onclick="checkAlreadyPaid(event)">
+                    <i class="fas fa-check-circle"></i> Already Paid?
+                </a>
+                <a href="#" class="paid-link" onclick="openHelpModal()" style="font-size: 0.8rem;">
+                    <i class="fas fa-question-circle"></i> Help
+                </a>
+            </div>
         </div>
     </header>
     
@@ -63,17 +66,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-shopping-cart"></i> Confirm Package</h2>
-                <button class="modal-close" onclick="closeModal('packageSelectionModal')">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="modal-close" onclick="closeModal('packageSelectionModal')"><i class="fas fa-times"></i></button>
             </div>
             
             <div id="selectedPackageDetails" style="margin-bottom: 20px;"></div>
             
             <div class="form-group">
-                <label class="form-label" for="modalPhoneNumber">
-                    <i class="fas fa-mobile-alt"></i> Phone Number (M-Pesa)
-                </label>
+                <label class="form-label"><i class="fas fa-mobile-alt"></i> Phone Number (M-Pesa)</label>
                 <div class="input-group">
                     <span class="input-icon"><i class="fas fa-phone"></i></span>
                     <input type="tel" id="modalPhoneNumber" class="form-input" 
@@ -84,6 +83,11 @@
             <button class="btn btn-primary btn-block" onclick="confirmPackage()" id="modalConnectButton">
                 <i class="fas fa-plug"></i> Connect Now
             </button>
+            
+            <!-- Payment Status Section -->
+            <div id="paymentStatusSection" style="display: none; margin-top: 16px;">
+                <div id="paymentStatusContent"></div>
+            </div>
         </div>
     </div>
     
@@ -110,9 +114,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-check-circle"></i> Already Paid?</h2>
-                <button class="modal-close" onclick="closeModal('paidModal')">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="modal-close" onclick="closeModal('paidModal')"><i class="fas fa-times"></i></button>
             </div>
             <div id="paidModalContent">
                 <p style="margin-bottom: 16px;">Checking your session...</p>
@@ -127,25 +129,92 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-tv"></i> Connect TV</h2>
-                <button class="modal-close" onclick="closeModal('tvModal')">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="modal-close" onclick="closeModal('tvModal')"><i class="fas fa-times"></i></button>
             </div>
             <p style="margin-bottom: 16px;">Enter your TV's MAC address to connect:</p>
-            
             <div class="input-group">
                 <span class="input-icon"><i class="fas fa-tv"></i></span>
                 <input type="text" id="tvMac" class="form-input" placeholder="e.g., AA:BB:CC:DD:EE:FF">
             </div>
-            
             <p style="margin-bottom: 16px; margin-top: 16px;">Select a package for your TV:</p>
             <select id="tvPackageSelect" class="form-input" style="margin-bottom: 16px;">
                 <option value="">Select package...</option>
             </select>
-            
             <button class="btn btn-primary btn-block" onclick="connectTv()">
                 <i class="fas fa-plug"></i> Connect TV
             </button>
+        </div>
+    </div>
+    
+    <!-- ====================================================================
+    CONNECTION HELP MODAL (NEW)
+    ==================================================================== -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-question-circle"></i> Connection Help</h2>
+                <button class="modal-close" onclick="closeModal('helpModal')"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #2d3748; margin-bottom: 12px;">Having trouble connecting?</h3>
+                <p style="color: #718096; font-size: 14px; margin-bottom: 16px;">
+                    Follow these steps to get connected:
+                </p>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+                        <p style="font-size: 14px; color: #4a5568;">Make sure you've completed your M-Pesa payment</p>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+                        <p style="font-size: 14px; color: #4a5568;">Check if your phone received M-Pesa confirmation</p>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+                        <p style="font-size: 14px; color: #4a5568;">Click "Already Paid?" to reconnect if payment was successful</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">4</div>
+                        <p style="font-size: 14px; color: #4a5568;">Still not working? Call our support team</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-success btn-block" onclick="callSupportFromHelp()">
+                <i class="fas fa-phone-alt"></i> Call Support: <span id="helpSupportPhone">Loading...</span>
+            </button>
+            
+            <button class="btn btn-primary btn-block" onclick="closeModal('helpModal')" style="margin-top: 8px;">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
+    </div>
+    
+    <!-- ====================================================================
+    CHECK PAYMENT BY PHONE MODAL (NEW)
+    ==================================================================== -->
+    <div class="modal" id="checkPaymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-search"></i> Check My Payment</h2>
+                <button class="modal-close" onclick="closeModal('checkPaymentModal')"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Enter your phone number</label>
+                <div class="input-group">
+                    <span class="input-icon"><i class="fas fa-phone"></i></span>
+                    <input type="tel" id="checkPaymentPhone" class="form-input" placeholder="e.g., 0712345678" maxlength="10">
+                </div>
+            </div>
+            
+            <button class="btn btn-primary btn-block" onclick="checkPaymentByPhone()">
+                <i class="fas fa-search"></i> Check Payment
+            </button>
+            
+            <div id="checkPaymentResult" style="margin-top: 16px;"></div>
         </div>
     </div>
     
@@ -160,6 +229,7 @@
         let packagesList = [];
         let supportPhone = '+254700000000';
         let tvSupportEnabled = false;
+        let paymentPollingInterval = null;
         
         document.addEventListener('DOMContentLoaded', function() {
             loadPublicSettings();
@@ -175,6 +245,7 @@
                     supportPhone = data.support_phone || '+254700000000';
                     tvSupportEnabled = data.tv_support_enabled || false;
                     document.getElementById('floatingPhone').href = `tel:${supportPhone}`;
+                    document.getElementById('helpSupportPhone').textContent = supportPhone;
                     if (tvSupportEnabled) {
                         document.getElementById('bottomTvBar').style.display = 'flex';
                     }
@@ -203,7 +274,6 @@
                     error.style.display = 'flex';
                 }
             } catch (err) {
-                console.error('Error loading packages:', err);
                 error.style.display = 'flex';
             } finally {
                 loading.style.display = 'none';
@@ -214,47 +284,24 @@
             const grid = document.getElementById('pricingGrid');
             
             if (packages.length === 0) {
-                grid.innerHTML = `
-                    <div class="error-state" style="display: flex; grid-column: 1 / -1;">
-                        <i class="fas fa-box-open"></i>
-                        <p>No packages available at the moment</p>
-                    </div>
-                `;
+                grid.innerHTML = '<div class="error-state" style="display:flex;grid-column:1/-1;"><i class="fas fa-box-open"></i><p>No packages available</p></div>';
                 return;
             }
             
             grid.innerHTML = packages.map(pkg => `
-                <div class="pricing-card ${pkg.supports_tv ? 'supports-tv' : ''}" 
-                     onclick="selectPackage(${pkg.id})" 
-                     data-package-id="${pkg.id}">
+                <div class="pricing-card" onclick="selectPackage(${pkg.id})" data-package-id="${pkg.id}">
                     <div class="card-details">
                         <p class="plan-title">${pkg.name}</p>
                         <h3 class="price">${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}</h3>
-                        <p class="duration">
-                            <i class="fas fa-hourglass-half"></i> ${formatDuration(pkg.duration_seconds)}
-                        </p>
+                        <p class="duration"><i class="fas fa-hourglass-half"></i> ${formatDuration(pkg.duration_seconds)}</p>
                         <div class="package-meta">
-                            <span class="speed-badge">
-                                <i class="fas fa-download"></i> ${pkg.download_rate_limit}
-                            </span>
-                            <span class="speed-badge">
-                                <i class="fas fa-upload"></i> ${pkg.upload_rate_limit}
-                            </span>
-                            ${pkg.max_users > 1 ? `
-                            <span class="users-badge">
-                                <i class="fas fa-users"></i> ${pkg.max_users}
-                            </span>
-                            ` : ''}
-                            ${pkg.supports_tv ? `
-                            <span class="tv-badge">
-                                <i class="fas fa-tv"></i>
-                            </span>
-                            ` : ''}
+                            <span class="speed-badge"><i class="fas fa-download"></i> ${pkg.download_rate_limit}</span>
+                            <span class="speed-badge"><i class="fas fa-upload"></i> ${pkg.upload_rate_limit}</span>
+                            ${pkg.max_users > 1 ? `<span class="users-badge"><i class="fas fa-users"></i> ${pkg.max_users}</span>` : ''}
+                            ${pkg.supports_tv ? `<span class="tv-badge"><i class="fas fa-tv"></i></span>` : ''}
                         </div>
                     </div>
-                    <button class="btn-select">
-                        <i class="fas fa-mouse-pointer"></i> Select
-                    </button>
+                    <button class="btn-select"><i class="fas fa-mouse-pointer"></i> Select</button>
                 </div>
             `).join('');
         }
@@ -276,153 +323,42 @@
         function selectPackage(packageId) {
             selectedPackageId = packageId;
             
-            document.querySelectorAll('.pricing-card').forEach(card => {
-                card.classList.remove('selected');
-            });
+            document.querySelectorAll('.pricing-card').forEach(card => card.classList.remove('selected'));
             document.querySelector(`[data-package-id="${packageId}"]`).classList.add('selected');
             
             const pkg = packagesList.find(p => p.id === packageId);
             if (pkg) {
                 document.getElementById('selectedPackageDetails').innerHTML = `
-                    <div style="text-align: center; padding: 16px; background: #f0f9ff; border-radius: 12px; border: 2px solid #38bdf8;">
-                        <h3 style="color: #1b2a4c; margin-bottom: 8px; font-size: 18px;">${pkg.name}</h3>
-                        <div style="font-size: 24px; font-weight: 700; color: #0ea5e9;">
-                            ${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}
-                        </div>
-                        <div style="font-size: 14px; color: #718096; margin-top: 8px;">
+                    <div style="text-align:center;padding:16px;background:#f0f9ff;border-radius:12px;border:2px solid #38bdf8;">
+                        <h3 style="color:#1b2a4c;margin-bottom:8px;font-size:18px;">${pkg.name}</h3>
+                        <div style="font-size:24px;font-weight:700;color:#0ea5e9;">${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}</div>
+                        <div style="font-size:14px;color:#718096;margin-top:8px;">
                             <i class="fas fa-hourglass-half"></i> ${formatDuration(pkg.duration_seconds)}
-                            <span style="margin: 0 8px;">|</span>
+                            <span style="margin:0 8px;">|</span>
                             <i class="fas fa-download"></i> ${pkg.download_rate_limit}
-                            <span style="margin: 0 8px;">|</span>
-                            <i class="fas fa-upload"></i> ${pkg.upload_rate_limit}
                         </div>
-                        ${pkg.max_users > 1 ? `
-                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">
-                            <i class="fas fa-users"></i> Supports up to ${pkg.max_users} devices
-                        </div>
-                        ` : `
-                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">
-                            <i class="fas fa-user"></i> Single device only
-                        </div>
-                        `}
+                        ${pkg.max_users > 1 ? `<div style="font-size:12px;color:#718096;margin-top:4px;"><i class="fas fa-users"></i> Supports up to ${pkg.max_users} devices</div>` : ''}
                     </div>
                 `;
                 
                 document.getElementById('modalPhoneNumber').value = '';
+                document.getElementById('paymentStatusSection').style.display = 'none';
                 document.getElementById('packageSelectionModal').classList.add('open');
             }
         }
         
-        function confirmPackage() {
+        async function confirmPackage() {
             const phoneNumber = document.getElementById('modalPhoneNumber').value.trim();
             
-            if (!selectedPackageId) {
-                alert('Please select a package');
-                return;
-            }
-            if (!phoneNumber || phoneNumber.length < 10) {
-                alert('Please enter a valid 10-digit phone number');
-                return;
-            }
+            if (!selectedPackageId) { alert('Please select a package'); return; }
+            if (!phoneNumber || phoneNumber.length < 10) { alert('Please enter a valid phone number'); return; }
             
-            closeModal('packageSelectionModal');
             connectNow(phoneNumber);
         }
         
-        async function checkActiveSession() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const mac = urlParams.get('mac') || '';
-            if (!mac) return;
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/check-active-session?mac=${encodeURIComponent(mac)}`);
-                const data = await response.json();
-                if (data.success && data.has_active_session) {
-                    showPaidModalWithSession(data.transaction);
-                }
-            } catch (error) {
-                console.error('Error checking session:', error);
-            }
-        }
-        
-        function checkAlreadyPaid(event) {
-            event.preventDefault();
-            const urlParams = new URLSearchParams(window.location.search);
-            const mac = urlParams.get('mac') || '';
-            
-            if (!mac) {
-                document.getElementById('paidModalContent').innerHTML = `
-                    <p style="margin-bottom: 16px;">We couldn't detect your device. Please enter your phone number:</p>
-                    <div class="input-group">
-                        <span class="input-icon"><i class="fas fa-phone"></i></span>
-                        <input type="tel" id="reconnectPhone" class="form-input" placeholder="Phone number" maxlength="10">
-                    </div>
-                    <button class="btn btn-primary btn-block" onclick="checkByPhone()">
-                        <i class="fas fa-search"></i> Check Session
-                    </button>
-                `;
-            } else {
-                document.getElementById('paidModalContent').innerHTML = `
-                    <div style="text-align: center; padding: 20px;">
-                        <div class="spinner"></div>
-                        <p style="margin-top: 12px;">Checking your session...</p>
-                    </div>
-                `;
-                
-                fetch(`${BACKEND_URL}/api/check-active-session?mac=${encodeURIComponent(mac)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success && data.has_active_session) {
-                            showPaidModalWithSession(data.transaction);
-                        } else {
-                            document.getElementById('paidModalContent').innerHTML = `
-                                <p style="margin-bottom: 16px; color: #e53e3e;">
-                                    <i class="fas fa-exclamation-circle"></i> 
-                                    No active session found. Please purchase a new package.
-                                </p>
-                                <button class="btn btn-primary btn-block" onclick="closeModal('paidModal')">
-                                    <i class="fas fa-times"></i> Close
-                                </button>
-                            `;
-                        }
-                    });
-            }
-            
-            document.getElementById('paidModal').classList.add('open');
-        }
-        
-        function showPaidModalWithSession(transaction) {
-            const pkg = transaction.package || {};
-            const expiresAt = transaction.expires_at ? new Date(transaction.expires_at).toLocaleString() : 'N/A';
-            
-            document.getElementById('paidModalContent').innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <i class="fas fa-check-circle" style="font-size: 48px; color: #48bb78;"></i>
-                    <h3 style="margin: 16px 0; color: #2d3748;">Active Session Found!</h3>
-                    <p style="margin-bottom: 8px;"><strong>Package:</strong> ${pkg.name || 'Unknown'}</p>
-                    <p style="margin-bottom: 8px;"><strong>Expires:</strong> ${expiresAt}</p>
-                    <button class="btn btn-success btn-block" onclick="reconnectDevice()">
-                        <i class="fas fa-plug"></i> Reconnect Now
-                    </button>
-                </div>
-            `;
-        }
-        
-        function checkByPhone() {
-            const phone = document.getElementById('reconnectPhone').value;
-            if (!phone) {
-                alert('Please enter your phone number');
-                return;
-            }
-            alert('Phone number check coming soon');
-        }
-        
-        function reconnectDevice() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const mac = urlParams.get('mac') || '';
-            const linkLoginOnly = urlParams.get('link_login_only') || '';
-            window.location.href = `${BACKEND_URL}/success?mac=${mac}&link_login_only=${linkLoginOnly}`;
-        }
+        // ================================================================
+        // CONNECT TO WIFI WITH PAYMENT STATUS CHECK
+        // ================================================================
         
         async function connectNow(phoneNumber) {
             const connectButton = document.getElementById('modalConnectButton');
@@ -449,19 +385,223 @@
                 });
                 
                 const data = await response.json();
+                
                 if (response.ok && data.success) {
-                    alert('Payment initiated! Check your phone for M-Pesa prompt.');
+                    // Show payment status section
+                    document.getElementById('paymentStatusSection').style.display = 'block';
+                    document.getElementById('paymentStatusContent').innerHTML = `
+                        <div style="text-align:center;padding:16px;background:#fffbeb;border-radius:8px;">
+                            <i class="fas fa-spinner fa-spin" style="color:#ed8936;"></i>
+                            <p style="margin-top:8px;color:#744210;">Payment initiated! Check your phone for M-Pesa prompt...</p>
+                            <p style="font-size:12px;color:#a0aec0;margin-top:4px;">Transaction: ${data.transaction_id.substring(0, 8)}...</p>
+                        </div>
+                    `;
+                    
+                    // Start polling for payment status
+                    startPaymentPolling(data.transaction_id);
                 } else {
                     alert(data.error || 'Payment initiation failed');
                 }
             } catch (error) {
-                console.error('Error:', error);
                 alert('Error connecting to payment service');
             } finally {
                 connectButton.disabled = false;
                 connectButton.innerHTML = '<i class="fas fa-plug"></i> Connect Now';
             }
         }
+        
+        function startPaymentPolling(transactionId) {
+            if (paymentPollingInterval) clearInterval(paymentPollingInterval);
+            
+            let attempts = 0;
+            const maxAttempts = 10; // Poll for ~50 seconds
+            
+            paymentPollingInterval = setInterval(async () => {
+                attempts++;
+                
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/payment-status/${transactionId}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'SUCCESS') {
+                        clearInterval(paymentPollingInterval);
+                        document.getElementById('paymentStatusContent').innerHTML = `
+                            <div style="text-align:center;padding:16px;background:#f0fff4;border-radius:8px;">
+                                <i class="fas fa-check-circle" style="color:#48bb78;font-size:32px;"></i>
+                                <p style="margin-top:8px;color:#22543d;font-weight:600;">Payment successful!</p>
+                                <p style="font-size:12px;color:#718096;margin-top:4px;">Connecting you to WiFi...</p>
+                            </div>
+                        `;
+                        
+                        // Redirect to success page after 2 seconds
+                        setTimeout(() => {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            window.location.href = `${BACKEND_URL}/success?${urlParams.toString()}`;
+                        }, 2000);
+                    } else if (data.status === 'FAILED') {
+                        clearInterval(paymentPollingInterval);
+                        document.getElementById('paymentStatusContent').innerHTML = `
+                            <div style="text-align:center;padding:16px;background:#fff5f5;border-radius:8px;">
+                                <i class="fas fa-times-circle" style="color:#e53e3e;font-size:32px;"></i>
+                                <p style="margin-top:8px;color:#742a2a;font-weight:600;">Payment failed</p>
+                                <button class="btn btn-primary btn-sm" onclick="closeModal('packageSelectionModal')">Try Again</button>
+                            </div>
+                        `;
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(paymentPollingInterval);
+                        document.getElementById('paymentStatusContent').innerHTML = `
+                            <div style="text-align:center;padding:16px;background:#fffbeb;border-radius:8px;">
+                                <p style="color:#744210;">Still waiting for payment confirmation...</p>
+                                <p style="font-size:12px;color:#a0aec0;margin-top:4px;">
+                                    Having trouble? <a href="#" onclick="openHelpModal()" style="color:#667eea;">Click here for help</a>
+                                </p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 5000);
+        }
+        
+        // ================================================================
+        // CHECK ACTIVE SESSION (Already Paid)
+        // ================================================================
+        
+        async function checkActiveSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mac = urlParams.get('mac') || '';
+            if (!mac) return;
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/check-active-session?mac=${encodeURIComponent(mac)}`);
+                const data = await response.json();
+                if (data.success && data.has_active_session) {
+                    showPaidModalWithSession(data.transaction);
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+            }
+        }
+        
+        function checkAlreadyPaid(event) {
+            event.preventDefault();
+            const urlParams = new URLSearchParams(window.location.search);
+            const mac = urlParams.get('mac') || '';
+            
+            if (!mac) {
+                // No MAC detected - ask for phone number
+                document.getElementById('paidModalContent').innerHTML = `
+                    <p style="margin-bottom:16px;">Enter your phone number to check your payment:</p>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-phone"></i></span>
+                        <input type="tel" id="reconnectPhone" class="form-input" placeholder="Phone number" maxlength="10">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="checkByPhone()">
+                        <i class="fas fa-search"></i> Check Payment
+                    </button>
+                `;
+            } else {
+                document.getElementById('paidModalContent').innerHTML = `
+                    <div style="text-align:center;padding:20px;">
+                        <div class="spinner"></div>
+                        <p style="margin-top:12px;">Checking your session...</p>
+                    </div>
+                `;
+                
+                fetch(`${BACKEND_URL}/api/check-active-session?mac=${encodeURIComponent(mac)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.has_active_session) {
+                            showPaidModalWithSession(data.transaction);
+                        } else {
+                            document.getElementById('paidModalContent').innerHTML = `
+                                <p style="margin-bottom:16px;color:#e53e3e;">
+                                    <i class="fas fa-exclamation-circle"></i> 
+                                    No active session found. Please purchase a new package.
+                                </p>
+                                <button class="btn btn-primary btn-block" onclick="closeModal('paidModal')">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            `;
+                        }
+                    });
+            }
+            
+            document.getElementById('paidModal').classList.add('open');
+        }
+        
+        function showPaidModalWithSession(transaction) {
+            const pkg = transaction.package || {};
+            const expiresAt = transaction.expires_at ? new Date(transaction.expires_at).toLocaleString() : 'N/A';
+            
+            document.getElementById('paidModalContent').innerHTML = `
+                <div style="text-align:center;padding:20px;">
+                    <i class="fas fa-check-circle" style="font-size:48px;color:#48bb78;"></i>
+                    <h3 style="margin:16px 0;color:#2d3748;">Active Session Found!</h3>
+                    <p style="margin-bottom:8px;"><strong>Package:</strong> ${pkg.name || 'Unknown'}</p>
+                    <p style="margin-bottom:8px;"><strong>Expires:</strong> ${expiresAt}</p>
+                    <button class="btn btn-success btn-block" onclick="reconnectDevice()">
+                        <i class="fas fa-plug"></i> Reconnect Now
+                    </button>
+                </div>
+            `;
+        }
+        
+        async function checkByPhone() {
+            const phone = document.getElementById('reconnectPhone').value.trim();
+            if (!phone) { alert('Please enter your phone number'); return; }
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/check-payment-by-phone?phone_number=${encodeURIComponent(phone)}`);
+                const data = await response.json();
+                
+                if (data.success && data.has_active_session) {
+                    showPaidModalWithSession(data.active_transaction);
+                } else if (data.success && data.has_transactions) {
+                    document.getElementById('paidModalContent').innerHTML = `
+                        <p style="margin-bottom:16px;color:#ed8936;">
+                            <i class="fas fa-clock"></i> 
+                            No active session found. Your last transaction was ${data.recent_transactions[0]?.status || 'unknown'}.
+                        </p>
+                        <button class="btn btn-primary btn-block" onclick="closeModal('paidModal')">Close</button>
+                    `;
+                } else {
+                    document.getElementById('paidModalContent').innerHTML = `
+                        <p style="margin-bottom:16px;color:#e53e3e;">
+                            <i class="fas fa-exclamation-circle"></i> 
+                            No transactions found for this phone number.
+                        </p>
+                        <button class="btn btn-primary btn-block" onclick="closeModal('paidModal')">Close</button>
+                    `;
+                }
+            } catch (error) {
+                alert('Error checking payment');
+            }
+        }
+        
+        function reconnectDevice() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mac = urlParams.get('mac') || '';
+            const linkLoginOnly = urlParams.get('link_login_only') || '';
+            window.location.href = `${BACKEND_URL}/success?mac=${mac}&link_login_only=${linkLoginOnly}`;
+        }
+        
+        // ================================================================
+        // CONNECTION HELP MODAL
+        // ================================================================
+        
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.add('open');
+        }
+        
+        function callSupportFromHelp() {
+            window.location.href = `tel:${supportPhone}`;
+        }
+        
+        // ================================================================
+        // TV CONNECTION
+        // ================================================================
         
         function openTvModal() {
             document.getElementById('tvModal').classList.add('open');
@@ -488,10 +628,13 @@
                     alert(data.error || 'Failed to connect TV');
                 }
             } catch (error) {
-                console.error('Error:', error);
                 alert('Error connecting TV');
             }
         }
+        
+        // ================================================================
+        // SUPPORT CALL
+        // ================================================================
         
         function callSupport(event) {
             event.preventDefault();
@@ -499,47 +642,28 @@
         }
         
         // ================================================================
-        // FIXED formatDuration - Correctly handles days, weeks, months
+        // UTILITY FUNCTIONS
         // ================================================================
+        
         function formatDuration(seconds) {
             if (!seconds) return '-';
             seconds = parseInt(seconds);
-            
-            // Minutes (less than 1 hour)
-            if (seconds < 3600) {
-                return `${Math.floor(seconds / 60)} mins`;
-            }
-            
-            // Hours (less than 1 day)
+            if (seconds < 3600) return `${Math.floor(seconds / 60)} mins`;
             if (seconds < 86400) {
                 const hours = Math.floor(seconds / 3600);
                 return `${hours} ${hours === 1 ? 'hr' : 'hrs'}`;
             }
-            
-            // Days (1-6 days)
             if (seconds < 604800) {
                 const days = Math.floor(seconds / 86400);
                 return `${days} ${days === 1 ? 'day' : 'days'}`;
             }
-            
-            // Weeks (7-27 days)
             if (seconds < 2592000) {
                 const days = Math.floor(seconds / 86400);
-                if (days % 7 === 0) {
-                    const weeks = days / 7;
-                    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
-                }
+                if (days % 7 === 0) return `${days / 7} ${days / 7 === 1 ? 'week' : 'weeks'}`;
                 return `${days} days`;
             }
-            
-            // Months (30+ days)
             const months = Math.floor(seconds / 2592000);
-            const remainingDays = Math.floor((seconds % 2592000) / 86400);
-            
-            if (remainingDays === 0) {
-                return `${months} ${months === 1 ? 'month' : 'months'}`;
-            }
-            return `${months} ${months === 1 ? 'month' : 'months'} ${remainingDays} days`;
+            return `${months} ${months === 1 ? 'month' : 'months'}`;
         }
         
         function closeModal(modalId) {

@@ -35,23 +35,16 @@
     ==================================================================== -->
     <main class="portal-main">
         <div class="container">
-            <!-- Page Title -->
             <div class="page-title">
                 <h2>CHECK OUR PRICING</h2>
                 <p>Choose a plan that fits your needs</p>
             </div>
             
-            <!-- ============================================================
-            PRICING GRID (2-Column Layout - Always)
-            ============================================================ -->
             <div class="pricing-grid" id="pricingGrid">
-                <!-- Loading State -->
                 <div class="loading-state" id="loadingState">
                     <div class="spinner"></div>
                     <p>Loading packages...</p>
                 </div>
-                
-                <!-- Error State -->
                 <div class="error-state" id="errorState" style="display: none;">
                     <i class="fas fa-exclamation-circle"></i>
                     <p>Failed to load packages</p>
@@ -64,7 +57,7 @@
     </main>
     
     <!-- ====================================================================
-    PACKAGE SELECTION MODAL (Shows on card click)
+    PACKAGE SELECTION MODAL
     ==================================================================== -->
     <div class="modal" id="packageSelectionModal">
         <div class="modal-content">
@@ -75,32 +68,19 @@
                 </button>
             </div>
             
-            <!-- Selected Package Details -->
-            <div id="selectedPackageDetails" style="margin-bottom: 20px;">
-                <!-- Filled dynamically -->
-            </div>
+            <div id="selectedPackageDetails" style="margin-bottom: 20px;"></div>
             
-            <!-- Phone Number Input -->
             <div class="form-group">
                 <label class="form-label" for="modalPhoneNumber">
                     <i class="fas fa-mobile-alt"></i> Phone Number (M-Pesa)
                 </label>
                 <div class="input-group">
                     <span class="input-icon"><i class="fas fa-phone"></i></span>
-                    <input 
-                        type="tel" 
-                        id="modalPhoneNumber" 
-                        class="form-input" 
-                        placeholder="e.g., 0712345678" 
-                        maxlength="10"
-                        pattern="[0-9]{10}"
-                        inputmode="numeric"
-                        required
-                    >
+                    <input type="tel" id="modalPhoneNumber" class="form-input" 
+                           placeholder="e.g., 0712345678" maxlength="10" inputmode="numeric" required>
                 </div>
             </div>
             
-            <!-- Connect Button -->
             <button class="btn btn-primary btn-block" onclick="confirmPackage()" id="modalConnectButton">
                 <i class="fas fa-plug"></i> Connect Now
             </button>
@@ -181,31 +161,20 @@
         let supportPhone = '+254700000000';
         let tvSupportEnabled = false;
         
-        // ================================================================
-        // INITIALIZATION
-        // ================================================================
-        
         document.addEventListener('DOMContentLoaded', function() {
             loadPublicSettings();
             loadPackages();
             checkActiveSession();
         });
         
-        // ================================================================
-        // LOAD PUBLIC SETTINGS
-        // ================================================================
-        
         async function loadPublicSettings() {
             try {
                 const response = await fetch(`${BACKEND_URL}/api/settings/public`);
                 const data = await response.json();
-                
                 if (data.success) {
                     supportPhone = data.support_phone || '+254700000000';
                     tvSupportEnabled = data.tv_support_enabled || false;
-                    
                     document.getElementById('floatingPhone').href = `tel:${supportPhone}`;
-                    
                     if (tvSupportEnabled) {
                         document.getElementById('bottomTvBar').style.display = 'flex';
                     }
@@ -214,10 +183,6 @@
                 console.error('Error loading settings:', error);
             }
         }
-        
-        // ================================================================
-        // LOAD PACKAGES
-        // ================================================================
         
         async function loadPackages() {
             const grid = document.getElementById('pricingGrid');
@@ -230,7 +195,6 @@
             try {
                 const response = await fetch(`${BACKEND_URL}/api/packages`);
                 const data = await response.json();
-                
                 if (data.success && data.packages.length > 0) {
                     packagesList = data.packages.filter(pkg => pkg.is_active);
                     renderPackages(packagesList);
@@ -245,10 +209,6 @@
                 loading.style.display = 'none';
             }
         }
-        
-        // ================================================================
-        // RENDER PACKAGES
-        // ================================================================
         
         function renderPackages(packages) {
             const grid = document.getElementById('pricingGrid');
@@ -299,10 +259,6 @@
             `).join('');
         }
         
-        // ================================================================
-        // POPULATE TV PACKAGE SELECT
-        // ================================================================
-        
         function populateTvPackageSelect(packages) {
             const select = document.getElementById('tvPackageSelect');
             const tvPackages = packages.filter(pkg => pkg.supports_tv);
@@ -317,23 +273,16 @@
             `).join('');
         }
         
-        // ================================================================
-        // PACKAGE SELECTION - Opens Modal (NO auto-scroll)
-        // ================================================================
-        
         function selectPackage(packageId) {
             selectedPackageId = packageId;
             
-            // Update selected state on cards
             document.querySelectorAll('.pricing-card').forEach(card => {
                 card.classList.remove('selected');
             });
             document.querySelector(`[data-package-id="${packageId}"]`).classList.add('selected');
             
-            // Find package details
             const pkg = packagesList.find(p => p.id === packageId);
             if (pkg) {
-                // Fill modal with package details
                 document.getElementById('selectedPackageDetails').innerHTML = `
                     <div style="text-align: center; padding: 16px; background: #f0f9ff; border-radius: 12px; border: 2px solid #38bdf8;">
                         <h3 style="color: #1b2a4c; margin-bottom: 8px; font-size: 18px;">${pkg.name}</h3>
@@ -359,17 +308,10 @@
                     </div>
                 `;
                 
-                // Clear phone input
                 document.getElementById('modalPhoneNumber').value = '';
-                
-                // Open modal
                 document.getElementById('packageSelectionModal').classList.add('open');
             }
         }
-        
-        // ================================================================
-        // CONFIRM PACKAGE FROM MODAL
-        // ================================================================
         
         function confirmPackage() {
             const phoneNumber = document.getElementById('modalPhoneNumber').value.trim();
@@ -378,33 +320,23 @@
                 alert('Please select a package');
                 return;
             }
-            
             if (!phoneNumber || phoneNumber.length < 10) {
                 alert('Please enter a valid 10-digit phone number');
                 return;
             }
             
-            // Close modal
             closeModal('packageSelectionModal');
-            
-            // Proceed to payment
             connectNow(phoneNumber);
         }
-        
-        // ================================================================
-        // CHECK ACTIVE SESSION
-        // ================================================================
         
         async function checkActiveSession() {
             const urlParams = new URLSearchParams(window.location.search);
             const mac = urlParams.get('mac') || '';
-            
             if (!mac) return;
             
             try {
                 const response = await fetch(`${BACKEND_URL}/api/check-active-session?mac=${encodeURIComponent(mac)}`);
                 const data = await response.json();
-                
                 if (data.success && data.has_active_session) {
                     showPaidModalWithSession(data.transaction);
                 }
@@ -415,7 +347,6 @@
         
         function checkAlreadyPaid(event) {
             event.preventDefault();
-            
             const urlParams = new URLSearchParams(window.location.search);
             const mac = urlParams.get('mac') || '';
             
@@ -493,13 +424,8 @@
             window.location.href = `${BACKEND_URL}/success?mac=${mac}&link_login_only=${linkLoginOnly}`;
         }
         
-        // ================================================================
-        // CONNECT TO WIFI
-        // ================================================================
-        
         async function connectNow(phoneNumber) {
             const connectButton = document.getElementById('modalConnectButton');
-            
             connectButton.disabled = true;
             connectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             
@@ -523,7 +449,6 @@
                 });
                 
                 const data = await response.json();
-                
                 if (response.ok && data.success) {
                     alert('Payment initiated! Check your phone for M-Pesa prompt.');
                 } else {
@@ -538,10 +463,6 @@
             }
         }
         
-        // ================================================================
-        // TV CONNECTION
-        // ================================================================
-        
         function openTvModal() {
             document.getElementById('tvModal').classList.add('open');
         }
@@ -550,28 +471,16 @@
             const tvMac = document.getElementById('tvMac').value.trim();
             const packageId = document.getElementById('tvPackageSelect').value;
             
-            if (!tvMac) {
-                alert('Please enter TV MAC address');
-                return;
-            }
-            
-            if (!packageId) {
-                alert('Please select a package');
-                return;
-            }
+            if (!tvMac) { alert('Please enter TV MAC address'); return; }
+            if (!packageId) { alert('Please select a package'); return; }
             
             try {
                 const response = await fetch(`${BACKEND_URL}/api/connect-tv`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tv_mac: tvMac,
-                        package_id: parseInt(packageId),
-                    }),
+                    body: JSON.stringify({ tv_mac: tvMac, package_id: parseInt(packageId) }),
                 });
-                
                 const data = await response.json();
-                
                 if (data.success) {
                     alert('TV connected successfully!');
                     closeModal('tvModal');
@@ -584,26 +493,53 @@
             }
         }
         
-        // ================================================================
-        // SUPPORT CALL
-        // ================================================================
-        
         function callSupport(event) {
             event.preventDefault();
             window.location.href = `tel:${supportPhone}`;
         }
         
         // ================================================================
-        // UTILITY FUNCTIONS
+        // FIXED formatDuration - Correctly handles days, weeks, months
         // ================================================================
-        
         function formatDuration(seconds) {
             if (!seconds) return '-';
-            if (seconds < 60) return `${seconds} sec`;
-            if (seconds < 3600) return `${Math.floor(seconds / 60)} mins`;
-            if (seconds < 86400) return `${Math.floor(seconds / 3600)} hrs`;
-            if (seconds < 604800) return `${Math.floor(seconds / 86400)} days`;
-            return `${Math.floor(seconds / 2592000)} months`;
+            seconds = parseInt(seconds);
+            
+            // Minutes (less than 1 hour)
+            if (seconds < 3600) {
+                return `${Math.floor(seconds / 60)} mins`;
+            }
+            
+            // Hours (less than 1 day)
+            if (seconds < 86400) {
+                const hours = Math.floor(seconds / 3600);
+                return `${hours} ${hours === 1 ? 'hr' : 'hrs'}`;
+            }
+            
+            // Days (1-6 days)
+            if (seconds < 604800) {
+                const days = Math.floor(seconds / 86400);
+                return `${days} ${days === 1 ? 'day' : 'days'}`;
+            }
+            
+            // Weeks (7-27 days)
+            if (seconds < 2592000) {
+                const days = Math.floor(seconds / 86400);
+                if (days % 7 === 0) {
+                    const weeks = days / 7;
+                    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+                }
+                return `${days} days`;
+            }
+            
+            // Months (30+ days)
+            const months = Math.floor(seconds / 2592000);
+            const remainingDays = Math.floor((seconds % 2592000) / 86400);
+            
+            if (remainingDays === 0) {
+                return `${months} ${months === 1 ? 'month' : 'months'}`;
+            }
+            return `${months} ${months === 1 ? 'month' : 'months'} ${remainingDays} days`;
         }
         
         function closeModal(modalId) {

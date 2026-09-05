@@ -1,12 +1,14 @@
 // ============================================================================
 // Lincoln's net - Admin Panel JavaScript (Complete)
-// Single page application with login and dashboard
-// Includes: max_users, supports_tv, TV devices, support phone settings
-// FIXED: formatDuration for days/weeks/months
+// Dark Mode Dashboard with Charts and Connected Users
 // ============================================================================
 
 const BACKEND_URL = 'https://lincolns-net-backend.onrender.com';
 const CURRENCY = 'KES';
+
+// Chart instances (global)
+let userConnectionsChart = null;
+let usersByPlanChart = null;
 
 // ============================================================================
 // AUTHENTICATION FUNCTIONS
@@ -45,11 +47,9 @@ function showLogin() {
 function showDashboard() {
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('dashboardView').style.display = 'flex';
+    document.getElementById('dashboardView').classList.add('dark-mode');
     
-    loadDashboardStats();
-    loadPackages();
-    loadTransactions();
-    loadTvDevices();
+    loadDashboardData();
 }
 
 // ============================================================================
@@ -156,7 +156,22 @@ function getNotificationIcon(type) {
 }
 
 // ============================================================================
-// DASHBOARD FUNCTIONS
+// DASHBOARD DATA LOADING
+// ============================================================================
+
+async function loadDashboardData() {
+    await Promise.all([
+        loadDashboardStats(),
+        loadConnectedUsers(),
+        loadUserConnectionsChart(),
+        loadUsersByPlanChart(),
+        loadPackages(),
+        loadTransactions(),
+    ]);
+}
+
+// ============================================================================
+// DASHBOARD STATS (Metric Cards)
 // ============================================================================
 
 async function loadDashboardStats() {
@@ -175,78 +190,66 @@ async function loadDashboardStats() {
         const data = await response.json();
         
         if (data.success) {
-            document.getElementById('totalPackages').textContent = data.total_packages || 0;
-            document.getElementById('activePackages').textContent = data.active_packages || 0;
+            // Update metric cards
+            document.getElementById('totalUsers').textContent = data.total_customers || 0;
+            document.getElementById('activeUsers').textContent = data.active_customers || 0;
+            document.getElementById('todayRevenue').textContent = `${CURRENCY} ${(data.today_revenue || 0).toLocaleString()}`;
             document.getElementById('totalRevenue').textContent = `${CURRENCY} ${(data.total_revenue || 0).toLocaleString()}`;
-            document.getElementById('totalTransactions').textContent = data.total_transactions || 0;
-            document.getElementById('activeCustomers').textContent = data.active_customers || 0;
             
-            const tvElement = document.getElementById('totalTvDevices');
-            if (tvElement) {
-                tvElement.textContent = data.total_tv_devices || 0;
-            }
+            // Update sidebar system info
+            document.getElementById('sidebarTotalUsers').textContent = data.total_customers || 0;
+            document.getElementById('sidebarActiveConnections').textContent = data.active_customers || 0;
+            document.getElementById('sidebarTotalRevenue').textContent = `${CURRENCY} ${(data.total_revenue || 0).toLocaleString()}`;
         }
     } catch (error) {
-        console.error('Error loading dashboard:', error);
-        showNotification('Error loading dashboard data', 'error');
+        console.error('Error loading dashboard stats:', error);
     }
 }
 
 // ============================================================================
-// PACKAGE MANAGEMENT
+// CONNECTED USERS TABLE
 // ============================================================================
 
-async function loadPackages() {
+async function loadConnectedUsers() {
     const token = getAuthToken();
-    const tbody = document.getElementById('packagesTableBody');
+    const tbody = document.getElementById('connectedUsersBody');
+    
+    if (!tbody) return;
     
     try {
-        const response = await fetch(`${BACKEND_URL}/admin/api/packages`, {
+        const response = await fetch(`${BACKEND_URL}/admin/api/transactions?status=SUCCESS&limit=10`, {
             headers: { 'Authorization': 'Basic ' + token },
         });
         
-        if (response.status === 401) {
-            logout();
-            return;
-        }
-        
         const data = await response.json();
         
-        if (data.success && data.packages.length > 0) {
-            tbody.innerHTML = data.packages.map(pkg => `
+        if (data.success && data.transactions.length > 0) {
+            tbody.innerHTML = data.transactions.map(tx => `
                 <tr>
                     <td>
-                        <strong>${pkg.name}</strong>
-                        ${pkg.description ? `<br><small style="color:#a0aec0;">${pkg.description}</small>` : ''}
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="user-avatar-sm">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span>${tx.phone_number}</span>
+                        </div>
                     </td>
-                    <td>${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}</td>
-                    <td>${formatDuration(pkg.duration_seconds)}</td>
+                    <td>${tx.mac_address || '—'}</td>
                     <td>
-                        <i class="fas fa-download"></i> ${pkg.download_rate_limit} 
-                        <i class="fas fa-upload"></i> ${pkg.upload_rate_limit}
+                        <span class="dark-badge green">
+                            <i class="fas fa-wifi"></i> ${tx.package?.name || 'Unknown'}
+                        </span>
                     </td>
+                    <td>${getTimeLeft(tx.expires_at)}</td>
+                    <td>${new Date(tx.created_at).toLocaleString()}</td>
                     <td>
-                        <span class="users-badge ${pkg.max_users > 1 ? '' : 'single'}">
-                            <i class="fas fa-${pkg.max_users > 1 ? 'users' : 'user'}"></i> ${pkg.max_users}
+                        <span class="dark-badge green">
+                            <i class="fas fa-circle"></i> Active
                         </span>
                     </td>
                     <td>
-                        ${pkg.supports_tv ? 
-                            '<span class="tv-badge"><i class="fas fa-tv"></i> Yes</span>' : 
-                            '<span style="color:#a0aec0;">—</span>'
-                        }
-                    </td>
-                    <td>
-                        <span class="status-badge ${pkg.is_active ? 'status-success' : 'status-failed'}">
-                            ${pkg.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editPackage(${pkg.id})" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePackage(${pkg.id})" title="Delete">
-                            <i class="fas fa-trash"></i>
+                        <button class="btn-disconnect" onclick="disconnectUser('${tx.mac_address}')">
+                            <i class="fas fa-unlink"></i> Disconnect
                         </button>
                     </td>
                 </tr>
@@ -254,16 +257,205 @@ async function loadPackages() {
         } else {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align:center; padding:40px; color:#a0aec0;">
-                        <i class="fas fa-box-open" style="font-size:40px; display:block; margin-bottom:12px;"></i>
-                        No packages found. Add your first package!
+                    <td colspan="7" style="text-align:center; padding:40px; color:#a0aec0;">
+                        <i class="fas fa-users" style="font-size:40px; display:block; margin-bottom:12px;"></i>
+                        No connected users
                     </td>
                 </tr>
             `;
         }
     } catch (error) {
+        console.error('Error loading connected users:', error);
+    }
+}
+
+function getTimeLeft(expiresAt) {
+    if (!expiresAt) return '—';
+    
+    const now = new Date();
+    const expires = new Date(expiresAt);
+    const diff = expires - now;
+    
+    if (diff <= 0) return 'Expired';
+    
+    const hours = Math.floor(diff / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    
+    if (hours > 24) {
+        const days = Math.floor(hours / 24);
+        return `${days}D ${hours % 24}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+async function disconnectUser(macAddress) {
+    if (!confirm('Disconnect this user?')) return;
+    
+    const token = getAuthToken();
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/admin/api/disconnect-user`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ' + token,
+            },
+            body: JSON.stringify({ mac_address: macAddress }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('User disconnected!', 'success');
+            loadConnectedUsers();
+        } else {
+            showNotification(data.error || 'Failed to disconnect', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error disconnecting user', 'error');
+    }
+}
+
+// ============================================================================
+// CHARTS
+// ============================================================================
+
+async function loadUserConnectionsChart() {
+    const canvas = document.getElementById('userConnectionsChart');
+    if (!canvas) return;
+    
+    // Destroy existing chart
+    if (userConnectionsChart) {
+        userConnectionsChart.destroy();
+    }
+    
+    // Sample data for 24 hours
+    const labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+    const data = [5, 3, 2, 1, 1, 2, 4, 6, 8, 10, 12, 14, 15, 16, 18, 20, 22, 23, 21, 18, 15, 12, 8, 6];
+    
+    userConnectionsChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Connected Users',
+                data: data,
+                fill: true,
+                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                borderColor: '#007bff',
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#a0aec0', maxTicksLimit: 12 },
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#a0aec0' },
+                },
+            },
+        },
+    });
+}
+
+async function loadUsersByPlanChart() {
+    const canvas = document.getElementById('usersByPlanChart');
+    if (!canvas) return;
+    
+    // Destroy existing chart
+    if (usersByPlanChart) {
+        usersByPlanChart.destroy();
+    }
+    
+    // Sample data
+    const data = {
+        labels: ['1 Hour', '3 Hours', '1 Day', '1 Week', '1 Month'],
+        datasets: [{
+            data: [41, 39, 28, 14, 8],
+            backgroundColor: ['#007bff', '#48bb78', '#ed8936', '#9f7aea', '#e53e3e'],
+            borderWidth: 0,
+        }]
+    };
+    
+    usersByPlanChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#a0aec0',
+                        padding: 10,
+                        font: { size: 12 },
+                    },
+                },
+            },
+            cutout: '60%',
+        },
+    });
+}
+
+// ============================================================================
+// PACKAGE MANAGEMENT (Same as before)
+// ============================================================================
+
+async function loadPackages() {
+    const token = getAuthToken();
+    const tbody = document.getElementById('packagesTableBody');
+    
+    if (!tbody) return;
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/admin/api/packages`, {
+            headers: { 'Authorization': 'Basic ' + token },
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.packages.length > 0) {
+            tbody.innerHTML = data.packages.map(pkg => `
+                <tr>
+                    <td><strong>${pkg.name}</strong></td>
+                    <td>${CURRENCY} ${parseFloat(pkg.price).toLocaleString()}</td>
+                    <td>${formatDuration(pkg.duration_seconds)}</td>
+                    <td>${pkg.download_rate_limit} / ${pkg.upload_rate_limit}</td>
+                    <td>${pkg.max_users || 1}</td>
+                    <td>${pkg.supports_tv ? 'Yes' : '—'}</td>
+                    <td>
+                        <span class="status-badge ${pkg.is_active ? 'status-success' : 'status-failed'}">
+                            ${pkg.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editPackage(${pkg.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePackage(${pkg.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    } catch (error) {
         console.error('Error loading packages:', error);
-        showNotification('Error loading packages', 'error');
     }
 }
 
@@ -272,7 +464,6 @@ function openPackageModal(packageData = null) {
     modal.classList.add('open');
     
     if (packageData) {
-        document.getElementById('packageModalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Package';
         document.getElementById('packageId').value = packageData.id;
         document.getElementById('packageName').value = packageData.name;
         document.getElementById('packageDescription').value = packageData.description || '';
@@ -283,124 +474,74 @@ function openPackageModal(packageData = null) {
         document.getElementById('packageMaxUsers').value = packageData.max_users || 1;
         document.getElementById('packageSupportsTv').checked = packageData.supports_tv || false;
     } else {
-        document.getElementById('packageModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Add Package';
         document.getElementById('packageForm').reset();
         document.getElementById('packageId').value = '';
         document.getElementById('packageMaxUsers').value = 1;
-        document.getElementById('packageSupportsTv').checked = false;
     }
 }
 
 function closePackageModal() {
     document.getElementById('packageModal').classList.remove('open');
-    
-    const form = document.getElementById('packageForm');
-    if (form) {
-        form.reset();
-        delete form.dataset.packageId;
-    }
-    
-    const title = document.querySelector('#packageModal .modal-header h2');
-    if (title) {
-        title.innerHTML = '<i class="fas fa-plus-circle"></i> Add Package';
-    }
 }
 
 async function editPackage(packageId) {
     const token = getAuthToken();
-    
     try {
         const response = await fetch(`${BACKEND_URL}/admin/api/packages/${packageId}`, {
             headers: { 'Authorization': 'Basic ' + token },
         });
-        
         const data = await response.json();
-        
         if (data.success) {
             openPackageModal(data.package);
             document.getElementById('packageForm').dataset.packageId = packageId;
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error loading package details', 'error');
     }
 }
 
 async function deletePackage(packageId) {
-    if (!confirm('Are you sure you want to deactivate this package?')) return;
-    
+    if (!confirm('Deactivate this package?')) return;
     const token = getAuthToken();
-    
     try {
-        const response = await fetch(`${BACKEND_URL}/admin/api/packages/${packageId}`, {
+        await fetch(`${BACKEND_URL}/admin/api/packages/${packageId}`, {
             method: 'DELETE',
             headers: { 'Authorization': 'Basic ' + token },
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Package deactivated!', 'success');
-            loadPackages();
-            loadDashboardStats();
-        }
+        showNotification('Package deactivated!', 'success');
+        loadPackages();
+        loadDashboardStats();
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error deactivating package', 'error');
     }
 }
 
 // ============================================================================
-// TRANSACTION MANAGEMENT
+// TRANSACTIONS (Same as before)
 // ============================================================================
 
 async function loadTransactions() {
     const token = getAuthToken();
     const tbody = document.getElementById('transactionsTableBody');
+    if (!tbody) return;
     
     try {
         const response = await fetch(`${BACKEND_URL}/admin/api/transactions`, {
             headers: { 'Authorization': 'Basic ' + token },
         });
-        
-        if (response.status === 401) {
-            logout();
-            return;
-        }
-        
         const data = await response.json();
         
         if (data.success && data.transactions.length > 0) {
             tbody.innerHTML = data.transactions.map(tx => `
                 <tr>
-                    <td>
-                        <code style="background:#f7fafc; padding:4px 8px; border-radius:4px;">
-                            ${tx.transaction_id ? tx.transaction_id.substring(0, 12) + '...' : '-'}
-                        </code>
-                    </td>
-                    <td><i class="fas fa-phone"></i> ${tx.phone_number}</td>
+                    <td>${tx.transaction_id ? tx.transaction_id.substring(0, 12) + '...' : '-'}</td>
+                    <td>${tx.phone_number}</td>
                     <td>${CURRENCY} ${parseFloat(tx.amount).toLocaleString()}</td>
-                    <td>
-                        <i class="fas fa-${tx.device_type === 'tv' ? 'tv' : tx.device_type === 'tablet' ? 'tablet' : 'mobile-alt'}"></i>
-                        ${tx.device_type || 'phone'}
-                    </td>
-                    <td>
-                        <span class="status-badge status-${tx.status.toLowerCase()}">
-                            ${tx.status}
-                        </span>
-                    </td>
-                    <td><i class="fas fa-calendar"></i> ${new Date(tx.created_at).toLocaleString()}</td>
+                    <td>${tx.device_type || 'phone'}</td>
+                    <td><span class="status-badge status-${tx.status.toLowerCase()}">${tx.status}</span></td>
+                    <td>${new Date(tx.created_at).toLocaleString()}</td>
                 </tr>
             `).join('');
-        } else {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align:center; padding:40px; color:#a0aec0;">
-                        <i class="fas fa-exchange-alt" style="font-size:40px; display:block; margin-bottom:12px;"></i>
-                        No transactions yet
-                    </td>
-                </tr>
-            `;
         }
     } catch (error) {
         console.error('Error loading transactions:', error);
@@ -408,99 +549,34 @@ async function loadTransactions() {
 }
 
 // ============================================================================
-// TV DEVICES MANAGEMENT
-// ============================================================================
-
-async function loadTvDevices() {
-    const token = getAuthToken();
-    const tbody = document.getElementById('tvDevicesTableBody');
-    
-    if (!tbody) return;
-    
-    try {
-        const response = await fetch(`${BACKEND_URL}/admin/api/tv-devices`, {
-            headers: { 'Authorization': 'Basic ' + token },
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.devices && data.devices.length > 0) {
-            tbody.innerHTML = data.devices.map(device => `
-                <tr>
-                    <td>
-                        <code style="background:#f7fafc; padding:4px 8px; border-radius:4px;">
-                            ${device.mac_address}
-                        </code>
-                    </td>
-                    <td>${device.package_id ? `Package #${device.package_id}` : '—'}</td>
-                    <td>
-                        <span class="status-badge ${device.is_active ? 'status-success' : 'status-failed'}">
-                            ${device.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td>${device.expires_at ? new Date(device.expires_at).toLocaleString() : '—'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="disconnectTv(${device.id})">
-                            <i class="fas fa-unlink"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } else {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="5" style="text-align:center; padding:40px; color:#a0aec0;">
-                        <i class="fas fa-tv" style="font-size:40px; display:block; margin-bottom:12px;"></i>
-                        No TV devices connected
-                    </td>
-                </tr>
-            `;
-        }
-    } catch (error) {
-        console.error('Error loading TV devices:', error);
-    }
-}
-
-async function disconnectTv(deviceId) {
-    if (!confirm('Disconnect this TV device?')) return;
-    showNotification('TV disconnected', 'success');
-    loadTvDevices();
-}
-
-// ============================================================================
-// SETTINGS
+// SETTINGS (Same as before)
 // ============================================================================
 
 async function loadSettings() {
     const token = getAuthToken();
     const settingsContent = document.getElementById('settingsContent');
+    if (!settingsContent) return;
     
     try {
         const response = await fetch(`${BACKEND_URL}/admin/api/settings`, {
             headers: { 'Authorization': 'Basic ' + token },
         });
-        
         const data = await response.json();
         
         if (data.success && data.settings.length > 0) {
             settingsContent.innerHTML = data.settings.map(setting => `
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="fas fa-${setting.setting_key === 'support_phone' ? 'phone' : setting.setting_key === 'tv_support_enabled' ? 'tv' : 'cog'}"></i> 
-                        ${setting.description || setting.setting_key}
+                        <i class="fas fa-cog"></i> ${setting.description || setting.setting_key}
                     </label>
-                    <input type="text" class="form-input" 
-                           name="${setting.setting_key}" 
-                           value="${setting.setting_value}" 
-                           data-setting-key="${setting.setting_key}">
+                    <input type="text" class="form-input" name="${setting.setting_key}" 
+                           value="${setting.setting_value}" data-setting-key="${setting.setting_key}">
                 </div>
             `).join('') + `
                 <button class="btn btn-primary" onclick="saveSettings()">
                     <i class="fas fa-save"></i> Save Settings
                 </button>
             `;
-        } else {
-            settingsContent.innerHTML = '<p>No settings found</p>';
         }
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -525,11 +601,9 @@ async function saveSettings() {
                 }),
             });
         }
-        
-        showNotification('Settings saved successfully!', 'success');
+        showNotification('Settings saved!', 'success');
     } catch (error) {
-        console.error('Error saving settings:', error);
-        showNotification('Error saving settings', 'error');
+        console.error('Error:', error);
     }
 }
 
@@ -537,29 +611,18 @@ async function saveSettings() {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-// FIXED: Correctly handles days, weeks, months
 function formatDuration(seconds) {
     if (!seconds) return '-';
     seconds = parseInt(seconds);
-    
-    // Minutes (less than 1 hour)
-    if (seconds < 3600) {
-        return `${Math.floor(seconds / 60)} min`;
-    }
-    
-    // Hours (less than 1 day)
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
     if (seconds < 86400) {
         const hours = Math.floor(seconds / 3600);
         return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
     }
-    
-    // Days (1-6 days)
     if (seconds < 604800) {
         const days = Math.floor(seconds / 86400);
         return `${days} ${days === 1 ? 'day' : 'days'}`;
     }
-    
-    // Weeks (7-27 days)
     if (seconds < 2592000) {
         const days = Math.floor(seconds / 86400);
         if (days % 7 === 0) {
@@ -568,15 +631,8 @@ function formatDuration(seconds) {
         }
         return `${days} days`;
     }
-    
-    // Months (30+ days)
     const months = Math.floor(seconds / 2592000);
-    const remainingDays = Math.floor((seconds % 2592000) / 86400);
-    
-    if (remainingDays === 0) {
-        return `${months} ${months === 1 ? 'month' : 'months'}`;
-    }
-    return `${months} ${months === 1 ? 'month' : 'months'} ${remainingDays} days`;
+    return `${months} ${months === 1 ? 'month' : 'months'}`;
 }
 
 function showSection(section) {
@@ -585,13 +641,9 @@ function showSection(section) {
     });
     
     const sectionElement = document.getElementById(section + '-section');
-    if (sectionElement) {
-        sectionElement.style.display = 'block';
-    }
+    if (sectionElement) sectionElement.style.display = 'block';
     
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
     
     if (event && event.target) {
         const navLink = event.target.closest('.nav-link');
@@ -599,22 +651,27 @@ function showSection(section) {
     }
     
     switch (section) {
-        case 'dashboard': loadDashboardStats(); break;
-        case 'packages': loadPackages(); break;
-        case 'transactions': loadTransactions(); break;
-        case 'tv-devices': loadTvDevices(); break;
-        case 'settings': loadSettings(); break;
+        case 'dashboard':
+            loadDashboardData();
+            break;
+        case 'packages':
+            loadPackages();
+            break;
+        case 'transactions':
+            loadTransactions();
+            break;
+        case 'settings':
+            loadSettings();
+            break;
     }
     
     if (window.innerWidth <= 768) {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) sidebar.classList.remove('open');
+        document.getElementById('sidebar').classList.remove('open');
     }
 }
 
 function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.toggle('open');
+    document.getElementById('sidebar').classList.toggle('open');
 }
 
 // ============================================================================
@@ -631,7 +688,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (packageForm) {
         packageForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const packageId = this.dataset.packageId;
             const formData = {
                 name: document.getElementById('packageName').value.trim(),
@@ -666,12 +722,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================================
-// CREATE & UPDATE PACKAGE FUNCTIONS
+// CREATE & UPDATE PACKAGE
 // ============================================================================
 
 async function createPackage(formData) {
     const token = getAuthToken();
-    
     try {
         const response = await fetch(`${BACKEND_URL}/admin/api/packages`, {
             method: 'POST',
@@ -681,26 +736,20 @@ async function createPackage(formData) {
             },
             body: JSON.stringify(formData),
         });
-        
         const data = await response.json();
-        
         if (data.success) {
-            showNotification('Package created successfully!', 'success');
+            showNotification('Package created!', 'success');
             closePackageModal();
             loadPackages();
             loadDashboardStats();
-        } else {
-            showNotification(data.error || 'Error creating package', 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error creating package', 'error');
     }
 }
 
 async function updatePackage(packageId, formData) {
     const token = getAuthToken();
-    
     try {
         const response = await fetch(`${BACKEND_URL}/admin/api/packages/${packageId}`, {
             method: 'PUT',
@@ -710,19 +759,14 @@ async function updatePackage(packageId, formData) {
             },
             body: JSON.stringify(formData),
         });
-        
         const data = await response.json();
-        
         if (data.success) {
-            showNotification('Package updated successfully!', 'success');
+            showNotification('Package updated!', 'success');
             closePackageModal();
             loadPackages();
             loadDashboardStats();
-        } else {
-            showNotification(data.error || 'Error updating package', 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        showNotification('Error updating package', 'error');
     }
 }

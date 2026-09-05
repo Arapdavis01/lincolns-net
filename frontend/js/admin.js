@@ -1,6 +1,6 @@
 // ============================================================================
 // Lincoln's net - Admin Core Module
-// Handles: Authentication, Navigation, Notifications, Utilities
+// Handles: Authentication, Navigation, Sidebar, Notifications, Utilities
 // All other modules are loaded separately
 // ============================================================================
 
@@ -41,13 +41,40 @@ function showLogin() {
     if (usernameField) usernameField.focus();
 }
 
-function showDashboard() {
+async function showDashboard() {
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('dashboardView').style.display = 'flex';
     document.getElementById('dashboardView').classList.add('dark-mode');
     
-    // Load dashboard section by default
+    // Load sidebar if not already loaded
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) {
+        await loadSidebar();
+    }
+    
+    // Load notifications
+    loadNotifications();
+    
+    // Load dashboard section
     loadSection('dashboard');
+}
+
+// ============================================================================
+// SIDEBAR LOADING
+// ============================================================================
+
+async function loadSidebar() {
+    try {
+        const response = await fetch('../components/sidebar.html');
+        const html = await response.text();
+        
+        const dashboardView = document.getElementById('dashboardView');
+        if (dashboardView) {
+            dashboardView.insertAdjacentHTML('afterbegin', html);
+        }
+    } catch (error) {
+        console.error('Error loading sidebar:', error);
+    }
 }
 
 // ============================================================================
@@ -123,7 +150,7 @@ async function handleLogin(e) {
 }
 
 // ============================================================================
-// NOTIFICATION SYSTEM
+// NOTIFICATION SYSTEM (Toast)
 // ============================================================================
 
 function showNotification(message, type = 'info') {
@@ -154,6 +181,54 @@ function getNotificationIcon(type) {
 }
 
 // ============================================================================
+// NOTIFICATION BELL
+// ============================================================================
+
+async function loadNotifications() {
+    const token = getAuthToken();
+    const badge = document.getElementById('notificationBadge');
+    
+    if (!badge) return;
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/admin/api/dashboard/recent-transactions?limit=10`, {
+            headers: { 'Authorization': 'Basic ' + token },
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.transactions.length > 0) {
+            badge.textContent = data.transactions.length;
+            badge.style.display = 'block';
+            window.pendingNotifications = data.transactions;
+        } else {
+            badge.style.display = 'none';
+            window.pendingNotifications = [];
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        badge.style.display = 'none';
+    }
+}
+
+function showNotificationsAlert() {
+    const notifications = window.pendingNotifications || [];
+    
+    if (notifications.length === 0) {
+        alert('No new notifications');
+        return;
+    }
+    
+    let message = `You have ${notifications.length} recent transactions:\n\n`;
+    
+    notifications.forEach((tx, index) => {
+        message += `${index + 1}. ${tx.phone_number} - ${formatCurrency(tx.amount)} - ${tx.status}\n`;
+    });
+    
+    alert(message);
+}
+
+// ============================================================================
 // NAVIGATION SYSTEM
 // ============================================================================
 
@@ -167,6 +242,12 @@ function showSection(section) {
     const sectionElement = document.getElementById(section + '-section');
     if (sectionElement) {
         sectionElement.style.display = 'block';
+    }
+    
+    // Update page title
+    const pageTitle = document.getElementById('pageTitle');
+    if (pageTitle) {
+        pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace(/-/g, ' ');
     }
     
     // Update nav links
@@ -184,12 +265,12 @@ function showSection(section) {
     
     // Close sidebar on mobile
     if (window.innerWidth <= 768) {
-        document.getElementById('sidebar').classList.remove('open');
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.remove('open');
     }
 }
 
 function loadSection(section) {
-    // Calls the appropriate module function if it exists
     switch (section) {
         case 'dashboard':
             if (typeof loadDashboard === 'function') loadDashboard();
@@ -219,7 +300,8 @@ function loadSection(section) {
 }
 
 function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('open');
 }
 
 // ============================================================================
@@ -372,113 +454,3 @@ document.addEventListener('DOMContentLoaded', function() {
         showLogin();
     }
 });
-// ============================================================================
-// SIDEBAR LOADING
-// ============================================================================
-
-async function loadSidebar() {
-    try {
-        const response = await fetch('../components/sidebar.html');
-        const html = await response.text();
-        
-        // Insert sidebar into dashboard view
-        const dashboardView = document.getElementById('dashboardView');
-        if (dashboardView) {
-            // Insert at the beginning
-            dashboardView.insertAdjacentHTML('afterbegin', html);
-        }
-    } catch (error) {
-        console.error('Error loading sidebar:', error);
-        // Fallback: use inline sidebar if fetch fails
-    }
-}
-
-// Update showDashboard to load sidebar first
-async function showDashboard() {
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'flex';
-    document.getElementById('dashboardView').classList.add('dark-mode');
-    
-    // Load sidebar if not already loaded
-    const sidebar = document.getElementById('sidebar');
-    if (!sidebar) {
-        await loadSidebar();
-    }
-    
-    // Load dashboard section
-    loadSection('dashboard');
-}
-// ============================================================================
-// NOTIFICATION BELL
-// ============================================================================
-
-async function loadNotifications() {
-    const token = getAuthToken();
-    const badge = document.querySelector('.notification-bell .badge');
-    
-    if (!badge) return;
-    
-    try {
-        // Fetch recent transactions as notifications
-        const response = await fetch(`${BACKEND_URL}/admin/api/dashboard/recent-transactions?limit=10`, {
-            headers: { 'Authorization': 'Basic ' + token },
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.transactions.length > 0) {
-            // Update badge count
-            badge.textContent = data.transactions.length;
-            badge.style.display = 'block';
-            
-            // Store notifications for later
-            window.pendingNotifications = data.transactions;
-        } else {
-            badge.style.display = 'none';
-            window.pendingNotifications = [];
-        }
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-        badge.style.display = 'none';
-    }
-}
-
-function showNotificationsAlert() {
-    const notifications = window.pendingNotifications || [];
-    
-    if (notifications.length === 0) {
-        alert('No new notifications');
-        return;
-    }
-    
-    // Build message
-    let message = `You have ${notifications.length} recent transactions:\n\n`;
-    
-    notifications.forEach((tx, index) => {
-        message += `${index + 1}. ${tx.phone_number} - ${formatCurrency(tx.amount)} - ${tx.status}\n`;
-    });
-    
-    alert(message);
-}
-
-// ============================================================================
-// UPDATE showDashboard to load notifications
-// ============================================================================
-
-async function showDashboard() {
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'flex';
-    document.getElementById('dashboardView').classList.add('dark-mode');
-    
-    // Load sidebar if needed
-    const sidebar = document.getElementById('sidebar');
-    if (!sidebar) {
-        await loadSidebar();
-    }
-    
-    // Load notifications
-    loadNotifications();
-    
-    // Load dashboard
-    loadSection('dashboard');
-}

@@ -2,6 +2,7 @@
 // Lincoln's net - Admin Panel JavaScript (Complete)
 // Single page application with login and dashboard
 // Includes: max_users, supports_tv, TV devices, support phone settings
+// FIXED: formatDuration for days/weeks/months
 // ============================================================================
 
 const BACKEND_URL = 'https://lincolns-net-backend.onrender.com';
@@ -180,7 +181,6 @@ async function loadDashboardStats() {
             document.getElementById('totalTransactions').textContent = data.total_transactions || 0;
             document.getElementById('activeCustomers').textContent = data.active_customers || 0;
             
-            // TV devices stat
             const tvElement = document.getElementById('totalTvDevices');
             if (tvElement) {
                 tvElement.textContent = data.total_tv_devices || 0;
@@ -537,14 +537,46 @@ async function saveSettings() {
 // UTILITY FUNCTIONS
 // ============================================================================
 
+// FIXED: Correctly handles days, weeks, months
 function formatDuration(seconds) {
     if (!seconds) return '-';
-    if (seconds < 60) return `${seconds} seconds`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days`;
-    if (seconds < 2592000) return `${Math.floor(seconds / 604800)} weeks`;
-    return `${Math.floor(seconds / 2592000)} months`;
+    seconds = parseInt(seconds);
+    
+    // Minutes (less than 1 hour)
+    if (seconds < 3600) {
+        return `${Math.floor(seconds / 60)} min`;
+    }
+    
+    // Hours (less than 1 day)
+    if (seconds < 86400) {
+        const hours = Math.floor(seconds / 3600);
+        return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+    }
+    
+    // Days (1-6 days)
+    if (seconds < 604800) {
+        const days = Math.floor(seconds / 86400);
+        return `${days} ${days === 1 ? 'day' : 'days'}`;
+    }
+    
+    // Weeks (7-27 days)
+    if (seconds < 2592000) {
+        const days = Math.floor(seconds / 86400);
+        if (days % 7 === 0) {
+            const weeks = days / 7;
+            return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+        }
+        return `${days} days`;
+    }
+    
+    // Months (30+ days)
+    const months = Math.floor(seconds / 2592000);
+    const remainingDays = Math.floor((seconds % 2592000) / 86400);
+    
+    if (remainingDays === 0) {
+        return `${months} ${months === 1 ? 'month' : 'months'}`;
+    }
+    return `${months} ${months === 1 ? 'month' : 'months'} ${remainingDays} days`;
 }
 
 function showSection(section) {
@@ -590,13 +622,11 @@ function toggleSidebar() {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Login form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
     
-    // Package form
     const packageForm = document.getElementById('packageForm');
     if (packageForm) {
         packageForm.addEventListener('submit', function(e) {
@@ -622,14 +652,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close modals when clicking outside
     document.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.classList.remove('open');
         }
     });
     
-    // Check authentication
     if (isLoggedIn()) {
         showDashboard();
     } else {

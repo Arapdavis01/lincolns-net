@@ -1,7 +1,7 @@
 // ============================================================================
 // Lincoln's net - Admin Core Module
 // Handles: Authentication, Navigation, Sidebar, Notifications, Utilities
-// All other modules are loaded separately
+// Includes: Manual RADIUS Sync for failed auto-syncs
 // ============================================================================
 
 const BACKEND_URL = 'https://lincolns-net-backend.onrender.com';
@@ -46,16 +46,12 @@ async function showDashboard() {
     document.getElementById('dashboardView').style.display = 'flex';
     document.getElementById('dashboardView').classList.add('dark-mode');
     
-    // Load sidebar if not already loaded
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) {
         await loadSidebar();
     }
     
-    // Load notifications
     loadNotifications();
-    
-    // Load dashboard section
     loadSection('dashboard');
 }
 
@@ -206,7 +202,6 @@ async function loadNotifications() {
             window.pendingNotifications = [];
         }
     } catch (error) {
-        console.error('Error loading notifications:', error);
         badge.style.display = 'none';
         window.pendingNotifications = [];
     }
@@ -310,7 +305,6 @@ function getStatusColor(status) {
     }
 }
 
-// Close panel when clicking outside
 document.addEventListener('click', function(event) {
     const panel = document.getElementById('notificationsPanel');
     const bell = document.querySelector('.notification-bell');
@@ -332,18 +326,14 @@ function showSection(section) {
     });
     
     const sectionElement = document.getElementById(section + '-section');
-    if (sectionElement) {
-        sectionElement.style.display = 'block';
-    }
+    if (sectionElement) sectionElement.style.display = 'block';
     
     const pageTitle = document.getElementById('pageTitle');
     if (pageTitle) {
         pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace(/-/g, ' ');
     }
     
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
     
     if (event && event.target) {
         const navLink = event.target.closest('.nav-link');
@@ -360,30 +350,14 @@ function showSection(section) {
 
 function loadSection(section) {
     switch (section) {
-        case 'dashboard':
-            if (typeof loadDashboard === 'function') loadDashboard();
-            break;
-        case 'users':
-            if (typeof loadUsers === 'function') loadUsers();
-            break;
-        case 'hotspot-users':
-            if (typeof loadHotspotUsers === 'function') loadHotspotUsers();
-            break;
-        case 'vouchers':
-            if (typeof loadVouchers === 'function') loadVouchers();
-            break;
-        case 'plans':
-            if (typeof loadPlans === 'function') loadPlans();
-            break;
-        case 'payments':
-            if (typeof loadPayments === 'function') loadPayments();
-            break;
-        case 'reports':
-            if (typeof loadReports === 'function') loadReports();
-            break;
-        case 'settings':
-            if (typeof loadSettings === 'function') loadSettings();
-            break;
+        case 'dashboard': if (typeof loadDashboard === 'function') loadDashboard(); break;
+        case 'users': if (typeof loadUsers === 'function') loadUsers(); break;
+        case 'hotspot-users': if (typeof loadHotspotUsers === 'function') loadHotspotUsers(); break;
+        case 'vouchers': if (typeof loadVouchers === 'function') loadVouchers(); break;
+        case 'plans': if (typeof loadPlans === 'function') loadPlans(); break;
+        case 'payments': if (typeof loadPayments === 'function') loadPayments(); break;
+        case 'reports': if (typeof loadReports === 'function') loadReports(); break;
+        case 'settings': if (typeof loadSettings === 'function') loadSettings(); break;
     }
 }
 
@@ -399,35 +373,24 @@ function toggleSidebar() {
 function formatDuration(seconds) {
     if (!seconds) return '-';
     seconds = parseInt(seconds);
-    
     if (seconds < 60) return `${seconds} seconds`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
-    
     if (seconds < 86400) {
         const hours = Math.floor(seconds / 3600);
         return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
     }
-    
     if (seconds < 604800) {
         const days = Math.floor(seconds / 86400);
         return `${days} ${days === 1 ? 'day' : 'days'}`;
     }
-    
     if (seconds < 2592000) {
         const days = Math.floor(seconds / 86400);
-        if (days % 7 === 0) {
-            const weeks = days / 7;
-            return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
-        }
+        if (days % 7 === 0) return `${days / 7} ${days / 7 === 1 ? 'week' : 'weeks'}`;
         return `${days} days`;
     }
-    
     const months = Math.floor(seconds / 2592000);
     const remainingDays = Math.floor((seconds % 2592000) / 86400);
-    
-    if (remainingDays === 0) {
-        return `${months} ${months === 1 ? 'month' : 'months'}`;
-    }
+    if (remainingDays === 0) return `${months} ${months === 1 ? 'month' : 'months'}`;
     return `${months} ${months === 1 ? 'month' : 'months'} ${remainingDays} days`;
 }
 
@@ -437,22 +400,16 @@ function formatCurrency(amount) {
 
 function getTimeLeft(expiresAt) {
     if (!expiresAt) return '—';
-    
     const now = new Date();
     const expires = new Date(expiresAt);
     const diff = expires - now;
-    
     if (diff <= 0) return 'Expired';
     
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
     
-    if (hours > 24) {
-        const days = Math.floor(hours / 24);
-        return `${days}D ${hours % 24}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
+    if (hours > 24) return `${Math.floor(hours / 24)}D ${hours % 24}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
@@ -463,7 +420,6 @@ function getTimeLeft(expiresAt) {
 function openPackageModal(packageData = null) {
     const modal = document.getElementById('packageModal');
     if (!modal) return;
-    
     modal.classList.add('open');
     
     if (packageData) {
@@ -492,17 +448,61 @@ function closePackageModal() {
 }
 
 // ============================================================================
+// MANUAL RADIUS SYNC FUNCTION (NEW)
+// ============================================================================
+
+/**
+ * Manually sync a transaction to RADIUS.
+ * Used when auto-sync failed after payment.
+ * @param {string} transactionId - The transaction ID to sync
+ */
+async function manualRadiusSync(transactionId) {
+    if (!transactionId) {
+        showNotification('Transaction ID required', 'error');
+        return;
+    }
+    
+    if (!confirm('Manually sync this transaction to RADIUS?')) return;
+    
+    const token = getAuthToken();
+    
+    showNotification('Syncing to RADIUS...', 'info');
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/admin/api/manual-radius-sync`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ' + token,
+            },
+            body: JSON.stringify({ transaction_id: transactionId }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`RADIUS sync successful for ${data.mac_address}`, 'success');
+            
+            // Reload dashboard data
+            if (typeof loadDashboard === 'function') loadDashboard();
+            if (typeof loadPayments === 'function') loadPayments();
+        } else {
+            showNotification(data.error || 'RADIUS sync failed', 'error');
+        }
+    } catch (error) {
+        console.error('Manual sync error:', error);
+        showNotification('Error syncing to RADIUS', 'error');
+    }
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Login form
     const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
     
-    // Package form
     const packageForm = document.getElementById('packageForm');
     if (packageForm) {
         packageForm.addEventListener('submit', function(e) {
@@ -528,14 +528,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close modals when clicking outside
     document.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.classList.remove('open');
         }
     });
     
-    // Check authentication
     if (isLoggedIn()) {
         showDashboard();
     } else {

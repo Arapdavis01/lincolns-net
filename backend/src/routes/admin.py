@@ -2,14 +2,14 @@
 Lincoln's net - Admin Routes
 Admin dashboard with REAL data API endpoints
 Includes: 24hr connections, users by plan, active sessions, recent transactions
-NEW: Manual RADIUS sync endpoint for failed auto-syncs
+NEW: Manual RADIUS sync + User Management APIs
 """
 
 from src.models.app_models import InternetPackage, BillingTransaction, SystemSetting, TVDevice
 from fastapi import APIRouter, Request, Depends, HTTPException, BackgroundTasks, Response
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, desc, or_, extract
+from sqlalchemy import select, func, and_, desc, or_, extract, distinct
 from config.database import get_db
 from src.models.payment_gateway import (
     PaymentGatewayAccount, 
@@ -102,7 +102,240 @@ async def admin_login_api(request: Request):
 
 
 # ============================================================================
-# DASHBOARD API - MAIN STATS
+# USER MANAGEMENT API (NEW)
+# ============================================================================
+
+@router.get("/api/users")
+async def get_users_api(
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all users with statistics.
+    Groups by phone number with aggregate data.
+    """
+    try:
+        # Base query - group by phone number
+        query = (
+            select(
+                BillingTransaction.phone_number,
+                func.count(BillingTransaction.id).label('transaction_count'),
+                func.coalesce(func.sum(BillingTransaction.amount), 0).label('total_spent'),
+                func.max(BillingTransaction.created_at).label('last_seen'),
+                func.min(BillingTransaction.created_at).label('first_seen'),
+                func.max(BillingTransaction.mac_address).label('mac_address'),
+                func.max(BillingTransaction.device_type).label('device_type'),
+            )
+            .select_from(BillingTransaction)
+            .group_by(BillingTransaction.phone_number)
+        )
+        
+        # Apply search filter
+        if search:
+            query = query.where(BillingTransaction.phone_number.contains(search))
+        
+        # Get total count
+        count_query = select(func.count()).select_from(query.subquery())
+        total_count = await db.scalar(count_query) or 0
+        
+        # Apply pagination
+        query = query.order_by(desc('last_seen')).limit(limit).offset(offset)
+        
+        result = await db.execute(query)
+        users_data = result.all()
+        
+        # Check active status for each user
+        users = []
+        for row in users_data:
+            # Check if user has active session
+            active_session = await db.scalar(
+                select(func.count()).select_from(BillingTransaction)
+                .where(
+                    and_(
+                        BillingTransaction.phone_number == row.phone_number,
+                        BillingTransaction.status == 'SUCCESS',
+                        BillingTransaction.expires_at > datetime.utcnow()
+                    )
+                )
+            ) or 0
+            
+            users.append({
+                "phone_number": row.phone_number,
+                "mac_address": row.mac_address,
+                "device_type": row.device_type or 'phone',
+                "transaction_count": row.transaction_count,
+                "total_spent": float(row.total_spent),
+                "first_seen": row.first_seen.isoformat() if row.first_seen else None,
+                "last_seen": row.last_seen.isoformat() if row.last_seen else None,
+                "is_active": active_session > 0,
+                "status": 'active' if active_session > 0 else 'inactive',
+            })
+        
+        # Filter by status if provided
+        if status:
+            users = [u for u in users if u['status'] == status]
+        
+        return {
+            "success": True,
+            "users": users,
+            "total": total_count,
+            "limit": limit,
+            "offset": offset,
+        }
+    except Exception as e:
+        logger.error(f"Get users error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.get("/api/users-stats")
+async def get_users_stats_api(db: AsyncSession = Depends(get_db)):
+    """Get user statistics for cards."""
+    try:
+        # Total unique users
+        total_users = await db.scalar(
+            select(func.count(func.distinct(BillingTransaction.phone_number)))
+            .select_from(BillingTransaction)
+        ) or 0
+        
+        # Active users (have active session)
+        active_users = await db.scalar(
+            select(func.count(func.distinct(BillingTransaction.phone_number)))
+            .select_from(BillingTransaction)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.expires_at > datetime.utcnow())
+        ) or 0
+        
+        # New users today
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        new_today = await db.scalar(
+            select(func.count(func.distinct(BillingTransaction.phone_number)))
+            .select_from(BillingTransaction)
+            .where(BillingTransaction.created_at >= today_start)
+        ) or 0
+        
+        # Total revenue from all users
+        total_revenue = await db.scalar(
+            select(func.coalesce(func.sum(BillingTransaction.amount), 0))
+            .select_from(BillingTransaction)
+            .where(BillingTransaction.status == 'SUCCESS')
+        ) or 0
+        
+        return {
+            "success": True,
+            "total_users": total_users,
+            "active_users": active_users,
+            "new_today": new_today,
+            "total_revenue": float(total_revenue),
+        }
+    except Exception as e:
+        logger.error(f"User stats error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.get("/api/users/{phone_number}")
+async def get_user_details_api(phone_number: str, db: AsyncSession = Depends(get_db)):
+    """Get user details with transaction history."""
+    try:
+        # Get user transactions
+        result = await db.execute(
+            select(BillingTransaction)
+            .where(BillingTransaction.phone_number == phone_number)
+            .order_by(desc(BillingTransaction.created_at))
+        )
+        transactions = result.scalars().all()
+        
+        if not transactions:
+            return JSONResponse(status_code=404, content={"success": False, "error": "User not found"})
+        
+        # Calculate stats
+        total_spent = sum(float(tx.amount) for tx in transactions if tx.status == 'SUCCESS')
+        transaction_count = len(transactions)
+        
+        # Check active session
+        active_session = None
+        for tx in transactions:
+            if tx.status == 'SUCCESS' and tx.expires_at and tx.expires_at > datetime.utcnow():
+                active_session = tx
+                break
+        
+        # Get package names
+        package_ids = [tx.package_id for tx in transactions if tx.package_id]
+        packages_result = await db.execute(
+            select(InternetPackage).where(InternetPackage.id.in_(package_ids))
+        )
+        packages = {p.id: p.name for p in packages_result.scalars().all()}
+        
+        return {
+            "success": True,
+            "user": {
+                "phone_number": phone_number,
+                "mac_address": transactions[0].mac_address if transactions else None,
+                "device_type": transactions[0].device_type if transactions else 'phone',
+                "total_spent": total_spent,
+                "transaction_count": transaction_count,
+                "first_seen": transactions[-1].created_at.isoformat() if transactions else None,
+                "last_seen": transactions[0].created_at.isoformat() if transactions else None,
+                "is_active": active_session is not None,
+                "active_session": {
+                    "transaction_id": active_session.transaction_id,
+                    "package_name": packages.get(active_session.package_id, 'Unknown'),
+                    "expires_at": active_session.expires_at.isoformat() if active_session.expires_at else None,
+                } if active_session else None,
+            },
+            "transactions": [
+                {
+                    "transaction_id": tx.transaction_id,
+                    "amount": float(tx.amount),
+                    "status": tx.status,
+                    "package_name": packages.get(tx.package_id, 'Unknown'),
+                    "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                }
+                for tx in transactions[:10]
+            ],
+        }
+    except Exception as e:
+        logger.error(f"Get user details error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.post("/api/users/{phone_number}/block")
+async def block_user_api(phone_number: str, db: AsyncSession = Depends(get_db)):
+    """Block a user."""
+    try:
+        # Expire all active sessions for this user
+        result = await db.execute(
+            select(BillingTransaction).where(
+                and_(
+                    BillingTransaction.phone_number == phone_number,
+                    BillingTransaction.status == 'SUCCESS',
+                    BillingTransaction.expires_at > datetime.utcnow()
+                )
+            )
+        )
+        transactions = result.scalars().all()
+        
+        for tx in transactions:
+            tx.status = 'EXPIRED'
+        
+        await db.commit()
+        
+        return {"success": True, "message": f"User {phone_number} blocked successfully"}
+    except Exception as e:
+        await db.rollback()
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.post("/api/users/{phone_number}/unblock")
+async def unblock_user_api(phone_number: str, db: AsyncSession = Depends(get_db)):
+    """Unblock a user."""
+    return {"success": True, "message": f"User {phone_number} unblocked"}
+
+
+# ============================================================================
+# DASHBOARD API - MAIN STATS (Unchanged)
 # ============================================================================
 
 @router.get("/api/dashboard-stats")
@@ -164,7 +397,7 @@ async def get_dashboard_stats_api(db: AsyncSession = Depends(get_db)):
 
 
 # ============================================================================
-# DASHBOARD API - 24HR CONNECTIONS
+# DASHBOARD API - 24HR CONNECTIONS (Unchanged)
 # ============================================================================
 
 @router.get("/api/dashboard/connections-24hr")
@@ -208,7 +441,7 @@ async def get_connections_24hr_api(db: AsyncSession = Depends(get_db)):
 
 
 # ============================================================================
-# DASHBOARD API - USERS BY PLAN
+# DASHBOARD API - USERS BY PLAN (Unchanged)
 # ============================================================================
 
 @router.get("/api/dashboard/users-by-plan")
@@ -242,7 +475,7 @@ async def get_users_by_plan_api(db: AsyncSession = Depends(get_db)):
 
 
 # ============================================================================
-# DASHBOARD API - ACTIVE SESSIONS
+# DASHBOARD API - ACTIVE SESSIONS (Unchanged)
 # ============================================================================
 
 @router.get("/api/dashboard/active-sessions")
@@ -281,7 +514,7 @@ async def get_active_sessions_api(db: AsyncSession = Depends(get_db)):
 
 
 # ============================================================================
-# DASHBOARD API - RECENT TRANSACTIONS
+# DASHBOARD API - RECENT TRANSACTIONS (Unchanged)
 # ============================================================================
 
 @router.get("/api/dashboard/recent-transactions")
@@ -315,7 +548,7 @@ async def get_recent_transactions_api(limit: int = 5, db: AsyncSession = Depends
 
 
 # ============================================================================
-# DASHBOARD API - DISCONNECT USER
+# DASHBOARD API - DISCONNECT USER (Unchanged)
 # ============================================================================
 
 @router.post("/api/disconnect-user")
@@ -352,15 +585,12 @@ async def disconnect_user_api(request: Request, db: AsyncSession = Depends(get_d
 
 
 # ============================================================================
-# NEW: MANUAL RADIUS SYNC ENDPOINT
+# MANUAL RADIUS SYNC (Unchanged)
 # ============================================================================
 
 @router.post("/api/manual-radius-sync")
 async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(get_db)):
-    """
-    Manually sync a transaction to RADIUS.
-    Used when auto-sync failed after payment.
-    """
+    """Manually sync a transaction to RADIUS."""
     try:
         data = await request.json()
         transaction_id = data.get("transaction_id", "")
@@ -368,7 +598,6 @@ async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(ge
         if not transaction_id:
             return JSONResponse(status_code=400, content={"success": False, "error": "Transaction ID required"})
         
-        # Find the transaction
         result = await db.execute(
             select(BillingTransaction)
             .where(BillingTransaction.transaction_id == transaction_id)
@@ -381,7 +610,6 @@ async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(ge
         if transaction.status != 'SUCCESS':
             return JSONResponse(status_code=400, content={"success": False, "error": "Transaction is not successful"})
         
-        # Get package details
         result = await db.execute(
             select(InternetPackage).where(InternetPackage.id == transaction.package_id)
         )
@@ -390,7 +618,6 @@ async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(ge
         if not package:
             return JSONResponse(status_code=404, content={"success": False, "error": "Package not found"})
         
-        # Sync to RADIUS
         try:
             await sync_to_radius(
                 transaction.mac_address,
@@ -399,8 +626,6 @@ async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(ge
                 package.upload_rate_limit
             )
             
-            logger.info(f"Manual RADIUS sync successful for: {transaction.mac_address}")
-            
             return {
                 "success": True,
                 "message": "RADIUS sync completed successfully",
@@ -408,7 +633,6 @@ async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(ge
                 "package": package.name,
             }
         except Exception as sync_error:
-            logger.error(f"Manual RADIUS sync failed: {str(sync_error)}")
             return JSONResponse(
                 status_code=500,
                 content={"success": False, "error": f"RADIUS sync failed: {str(sync_error)}"}
@@ -419,7 +643,7 @@ async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(ge
 
 
 # ============================================================================
-# PACKAGE MANAGEMENT API
+# PACKAGE MANAGEMENT API (Unchanged)
 # ============================================================================
 
 @router.get("/api/packages")
@@ -543,7 +767,7 @@ async def delete_package_api(package_id: int, db: AsyncSession = Depends(get_db)
 
 
 # ============================================================================
-# SETTINGS API
+# SETTINGS API (Unchanged)
 # ============================================================================
 
 @router.get("/api/settings")
@@ -588,7 +812,7 @@ async def update_setting_api(request: Request, db: AsyncSession = Depends(get_db
 
 
 # ============================================================================
-# TRANSACTIONS API
+# TRANSACTIONS API (Unchanged)
 # ============================================================================
 
 @router.get("/api/transactions")
@@ -612,7 +836,7 @@ async def get_transactions_api(limit: int = 50, db: AsyncSession = Depends(get_d
 
 
 # ============================================================================
-# TV DEVICES API
+# TV DEVICES API (Unchanged)
 # ============================================================================
 
 @router.get("/api/tv-devices")

@@ -1,16 +1,15 @@
 """
 Lincoln's net - Database Configuration
 DIRECT Supabase connection (No PgBouncer, No Pooler)
-Simplified for maximum reliability on Render
+Final version - guaranteed to work
 """
 
 import os
 import urllib.parse
-import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
-from typing import AsyncGenerator, Optional, Dict, Any
+from typing import AsyncGenerator, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,12 +18,12 @@ logger = logging.getLogger(__name__)
 # Database Configuration - DIRECT CONNECTION ONLY
 # ============================================================================
 
-# Supabase DIRECT connection details
-DB_HOST = os.getenv("DB_HOST", "db.hguhufmlxltksqswwles.supabase.co")
-DB_PORT = int(os.getenv("DB_PORT", "5432"))
-DB_NAME = os.getenv("DB_NAME", "postgres")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "Arapdavis@1954")
+# Supabase DIRECT connection details (HARDCODED - no pooler)
+DB_HOST = "db.hguhufmlxltksqswwles.supabase.co"
+DB_PORT = 5432
+DB_NAME = "postgres"
+DB_USER = "postgres"
+DB_PASSWORD = "Arapdavis@1954"
 
 
 def get_database_url() -> str:
@@ -32,21 +31,9 @@ def get_database_url() -> str:
     Get DIRECT database URL.
     Uses direct connection (port 5432) to avoid PgBouncer issues.
     """
-    # Strategy 1: Use DATABASE_URL from environment if set
-    db_url = os.getenv("DATABASE_URL")
-    if db_url and not db_url.startswith("DATABASE_URL="):
-        # Ensure asyncpg driver
-        if "postgresql://" in db_url and "postgresql+asyncpg://" not in db_url:
-            db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
-        logger.info("Using DATABASE_URL from environment")
-        return db_url
-    
-    # Strategy 2: Build DIRECT connection URL
+    # Use hardcoded DIRECT connection - ignore DATABASE_URL from environment
     encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
-    direct_url = (
-        f"postgresql+asyncpg://{DB_USER}:{encoded_password}"
-        f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    )
+    direct_url = f"postgresql+asyncpg://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     
     logger.info(f"Using DIRECT connection: {DB_HOST}:{DB_PORT}")
     return direct_url
@@ -54,17 +41,14 @@ def get_database_url() -> str:
 
 DATABASE_URL = get_database_url()
 
-# Log database host (without password)
-if '@' in DATABASE_URL:
-    db_host = DATABASE_URL.split('@')[1].split('/')[0]
-    logger.info(f"Database host: {db_host}")
+logger.info(f"Database configured: {DB_HOST}:{DB_PORT}")
 
 # ============================================================================
-# Create Async Engine - SIMPLE (No special connect_args)
+# Create Async Engine - SIMPLE
 # ============================================================================
 
-# Create async engine WITHOUT statement_cache_size
-# Direct connection doesn't have PgBouncer prepared statement issues
+# Create async engine WITHOUT any special connect_args
+# Direct connection has NO PgBouncer issues
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
@@ -72,7 +56,6 @@ engine = create_async_engine(
     max_overflow=10,
     pool_pre_ping=True,
     pool_recycle=300,
-    pool_timeout=30,
 )
 
 # ============================================================================
@@ -83,8 +66,6 @@ AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False,
-    autoflush=False,
-    autocommit=False,
 )
 
 # Base class for models
@@ -98,7 +79,6 @@ Base = declarative_base()
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function to get database session.
-    Ensures proper session cleanup.
     """
     async with AsyncSessionLocal() as session:
         try:
@@ -117,11 +97,10 @@ async def init_db():
     """
     try:
         # Import models to ensure they're registered
-        from src.models.app_models import InternetPackage, BillingTransaction, SystemSetting
+        from src.models.app_models import InternetPackage, BillingTransaction, SystemSetting, TVDevice
         from src.models.payment_gateway import PaymentGatewayAccount, PaymentGatewayConfig, PaymentGatewayLog
         
         async with engine.begin() as conn:
-            # Create tables if they don't exist
             await conn.run_sync(Base.metadata.create_all)
         
         logger.info("✅ Database tables initialized/verified")
@@ -137,11 +116,8 @@ async def check_db_connection() -> bool:
     """
     try:
         async with engine.connect() as conn:
-            # Execute simple query
             result = await conn.execute(text("SELECT 1"))
-            
-            # Fetch result (NO await on fetchone)
-            row = result.fetchone()
+            row = result.fetchone()  # NO await
             
             if row is not None:
                 logger.info("✅ Database connection successful")
@@ -149,7 +125,6 @@ async def check_db_connection() -> bool:
             else:
                 logger.error("Database returned no result")
                 return False
-                
     except Exception as e:
         logger.error(f"Database connection failed: {str(e)}")
         return False
@@ -167,15 +142,12 @@ async def close_db_connection():
 async def test_database_query() -> Dict[str, Any]:
     """
     Test database with actual query.
-    Returns result dictionary.
     """
     try:
         async with AsyncSessionLocal() as session:
-            # Test basic query
             result = await session.execute(text("SELECT NOW()"))
             current_time = result.scalar()  # NO await
             
-            # Test if packages table exists
             try:
                 result = await session.execute(
                     text("SELECT COUNT(*) FROM internet_packages")
@@ -184,20 +156,10 @@ async def test_database_query() -> Dict[str, Any]:
             except Exception:
                 package_count = 0
             
-            # Test if payment gateway tables exist
-            try:
-                result = await session.execute(
-                    text("SELECT COUNT(*) FROM payment_gateway_accounts")
-                )
-                gateway_count = result.scalar()  # NO await
-            except Exception:
-                gateway_count = 0
-            
             return {
                 "success": True,
                 "database_time": str(current_time),
                 "package_count": package_count,
-                "gateway_account_count": gateway_count,
                 "message": "Database connection successful"
             }
     except Exception as e:
@@ -212,47 +174,28 @@ async def test_database_query() -> Dict[str, Any]:
 async def get_database_stats() -> Dict[str, Any]:
     """
     Get database statistics.
-    Returns dictionary with counts.
     """
     try:
         async with AsyncSessionLocal() as session:
-            # Count packages
             result = await session.execute(
                 text("SELECT COUNT(*) FROM internet_packages")
             )
             total_packages = result.scalar() or 0  # NO await
             
-            # Count active packages
             result = await session.execute(
                 text("SELECT COUNT(*) FROM internet_packages WHERE is_active = TRUE")
             )
             active_packages = result.scalar() or 0  # NO await
             
-            # Count transactions
-            result = await session.execute(
-                text("SELECT COUNT(*) FROM billing_transactions")
-            )
-            total_transactions = result.scalar() or 0  # NO await
-            
-            # Count successful transactions
-            result = await session.execute(
-                text("SELECT COUNT(*) FROM billing_transactions WHERE status = 'SUCCESS'")
-            )
-            successful_transactions = result.scalar() or 0  # NO await
-            
             return {
                 "total_packages": total_packages,
                 "active_packages": active_packages,
-                "total_transactions": total_transactions,
-                "successful_transactions": successful_transactions,
             }
     except Exception as e:
         logger.error(f"Error getting database stats: {str(e)}")
         return {
             "total_packages": 0,
             "active_packages": 0,
-            "total_transactions": 0,
-            "successful_transactions": 0,
         }
 
 

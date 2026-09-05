@@ -372,3 +372,39 @@ document.addEventListener('DOMContentLoaded', function() {
         showLogin();
     }
 });
+// ============================================================================
+// SIDEBAR LOADING
+// ============================================================================
+
+async function loadSidebar() {
+    try {
+        const response = await fetch('../components/sidebar.html');
+        const html = await response.text();
+        
+        // Insert sidebar into dashboard view
+        const dashboardView = document.getElementById('dashboardView');
+        if (dashboardView) {
+            // Insert at the beginning
+            dashboardView.insertAdjacentHTML('afterbegin', html);
+        }
+    } catch (error) {
+        console.error('Error loading sidebar:', error);
+        // Fallback: use inline sidebar if fetch fails
+    }
+}
+
+// Update showDashboard to load sidebar first
+async function showDashboard() {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('dashboardView').style.display = 'flex';
+    document.getElementById('dashboardView').classList.add('dark-mode');
+    
+    // Load sidebar if not already loaded
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) {
+        await loadSidebar();
+    }
+    
+    // Load dashboard section
+    loadSection('dashboard');
+}

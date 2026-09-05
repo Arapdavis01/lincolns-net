@@ -1531,3 +1531,293 @@ body {
         font-size: 13px;
     }
 }
+/* ============================================================================
+   USERS PAGE STYLES
+   Add these to the END of your styles.css
+   ============================================================================ */
+
+/* ============================================================================
+   USER SEARCH & FILTER BAR
+   ============================================================================ */
+
+.users-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.users-toolbar .input-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.users-toolbar .form-input {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text);
+}
+
+.users-toolbar .form-input:focus {
+    border-color: #007bff;
+}
+
+.users-toolbar .form-input::placeholder {
+    color: var(--dark-gray);
+}
+
+/* ============================================================================
+   USER AVATAR IN TABLE
+   ============================================================================ */
+
+.user-avatar-sm {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--white);
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   USER DETAIL MODAL
+   ============================================================================ */
+
+.user-detail-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.user-detail-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.user-detail-stat-box {
+    background: var(--dark-sidebar);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.user-detail-stat-box small {
+    color: var(--dark-gray);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-detail-stat-box div {
+    color: var(--dark-text);
+    font-weight: 700;
+    font-size: 18px;
+    margin-top: 4px;
+}
+
+/* Active Session Box */
+.user-active-session {
+    background: rgba(72, 187, 120, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--success);
+}
+
+.user-active-session small {
+    color: #48bb78;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-active-session div {
+    color: var(--dark-text);
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Transaction History in Modal */
+.user-transactions-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.user-transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--dark-border);
+}
+
+.user-transaction-item:last-child {
+    border-bottom: none;
+}
+
+/* ============================================================================
+   PAGINATION
+   ============================================================================ */
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 8px 14px;
+    background: var(--dark-card);
+    color: var(--dark-text);
+    border: 1px solid var(--dark-border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-btn:hover {
+    background: var(--dark-hover);
+    border-color: #007bff;
+}
+
+.pagination-btn.active {
+    background: #007bff;
+    color: var(--white);
+    border-color: #007bff;
+    font-weight: 700;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-dots {
+    color: var(--dark-gray);
+    font-size: 13px;
+    padding: 0 4px;
+}
+
+.pagination-info {
+    font-size: 12px;
+    color: var(--dark-gray);
+    margin-left: 8px;
+}
+
+/* ============================================================================
+   BLOCK/UNBLOCK BUTTONS
+   ============================================================================ */
+
+.btn-block-user {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    background: rgba(229, 62, 62, 0.2);
+    color: #e53e3e;
+    border: 1px solid #e53e3e;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-block-user:hover {
+    background: #e53e3e;
+    color: var(--white);
+}
+
+.btn-unblock-user {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+    border: 1px solid #48bb78;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-unblock-user:hover {
+    background: #48bb78;
+    color: var(--white);
+}
+
+/* ============================================================================
+   USER STATUS BADGES
+   ============================================================================ */
+
+.dark-badge.blocked {
+    background: rgba(229, 62, 62, 0.2);
+    color: #e53e3e;
+}
+
+.dark-badge.active {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+}
+
+.dark-badge.inactive {
+    background: rgba(160, 174, 192, 0.2);
+    color: #a0aec0;
+}
+
+/* ============================================================================
+   RESPONSIVE USERS PAGE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .users-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .users-toolbar .input-group {
+        min-width: 100%;
+    }
+    
+    .users-toolbar select {
+        width: 100%;
+    }
+    
+    .user-detail-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .pagination-info {
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-left: 0;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 400px) {
+    .pagination-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}

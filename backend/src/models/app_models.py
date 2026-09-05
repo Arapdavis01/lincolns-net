@@ -2,6 +2,7 @@
 Lincoln's net - Application Models
 Database models for core application
 Includes InternetPackage, BillingTransaction, SystemSetting, and TVDevice
+With is_blocked field for user blocking
 """
 
 from sqlalchemy import (
@@ -23,39 +24,22 @@ class InternetPackage(Base):
     """
     __tablename__ = 'internet_packages'
     
-    # Primary Key
     id = Column(Integer, primary_key=True, index=True)
-    
-    # Package Information
     name = Column(String(255), nullable=False, unique=True, index=True)
     description = Column(Text, nullable=True)
-    
-    # Pricing (in KES)
     price = Column(DECIMAL(10, 2), nullable=False)
-    
-    # Duration and Bandwidth
     duration_seconds = Column(Integer, nullable=False)
     download_rate_limit = Column(String(50), default='5M', nullable=False)
     upload_rate_limit = Column(String(50), default='2M', nullable=False)
-    
-    # NEW: Maximum users allowed (1 = single device, 2 = 2 devices, etc.)
     max_users = Column(Integer, default=1, nullable=False)
-    
-    # NEW: Whether this package supports TV connections
     supports_tv = Column(Boolean, default=False, nullable=False)
-    
-    # Status
     is_active = Column(Boolean, default=True, nullable=False, index=True)
-    
-    # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     
-    # Relationships
     transactions = relationship("BillingTransaction", back_populates="package")
     tv_devices = relationship("TVDevice", back_populates="package")
     
-    # Constraints
     __table_args__ = (
         CheckConstraint('price > 0', name='check_price_positive'),
         CheckConstraint('duration_seconds > 0', name='check_duration_positive'),
@@ -65,15 +49,6 @@ class InternetPackage(Base):
     )
     
     def to_dict(self, include_transactions: bool = False) -> Dict[str, Any]:
-        """
-        Convert package to dictionary.
-        
-        Args:
-            include_transactions: Whether to include related transactions
-        
-        Returns:
-            Dictionary representation of the package
-        """
         data = {
             'id': self.id,
             'name': self.name,
@@ -98,7 +73,6 @@ class InternetPackage(Base):
     
     @staticmethod
     def format_duration(seconds: int) -> str:
-        """Format duration in seconds to human-readable string."""
         if seconds < 60:
             return f"{seconds} seconds"
         elif seconds < 3600:
@@ -117,7 +91,6 @@ class InternetPackage(Base):
             return f"{months} month{'s' if months != 1 else ''}"
     
     def __repr__(self) -> str:
-        """String representation."""
         return f"<InternetPackage(id={self.id}, name='{self.name}', price=KES {self.price}, max_users={self.max_users})>"
 
 
@@ -128,10 +101,8 @@ class BillingTransaction(Base):
     """
     __tablename__ = 'billing_transactions'
     
-    # Primary Key
     id = Column(Integer, primary_key=True, index=True)
     
-    # Transaction Information
     transaction_id = Column(
         String(36), 
         unique=True, 
@@ -142,11 +113,8 @@ class BillingTransaction(Base):
     phone_number = Column(String(20), nullable=False, index=True)
     amount = Column(DECIMAL(10, 2), nullable=False)
     mac_address = Column(String(17), nullable=False, index=True)
-    
-    # NEW: Device type (phone, tablet, tv)
     device_type = Column(String(20), default='phone', nullable=False)
     
-    # Foreign Key
     package_id = Column(
         Integer, 
         ForeignKey('internet_packages.id', ondelete='SET NULL'),
@@ -154,7 +122,6 @@ class BillingTransaction(Base):
         index=True
     )
     
-    # Status and Payment
     status = Column(
         String(20), 
         default='PENDING', 
@@ -163,19 +130,19 @@ class BillingTransaction(Base):
     )
     payment_reference = Column(String(255), nullable=True)
     
-    # Timestamps
+    # NEW: Block user flag
+    is_blocked = Column(Boolean, default=False, nullable=False, index=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
     
-    # Relationships
     package = relationship("InternetPackage", back_populates="transactions")
     
-    # Constraints
     __table_args__ = (
         CheckConstraint('amount > 0', name='check_transaction_amount_positive'),
         CheckConstraint(
-            "status IN ('PENDING', 'SUCCESS', 'FAILED', 'EXPIRED')",
+            "status IN ('PENDING', 'SUCCESS', 'FAILED', 'EXPIRED', 'BLOCKED')",
             name='check_transaction_status_valid'
         ),
         CheckConstraint(
@@ -186,22 +153,13 @@ class BillingTransaction(Base):
         Index('idx_billing_transactions_status', 'status'),
         Index('idx_billing_transactions_created', 'created_at'),
         Index('idx_billing_transactions_expires', 'expires_at'),
+        Index('idx_billing_transactions_blocked', 'is_blocked'),
     )
     
-    # Valid statuses
-    VALID_STATUSES = ['PENDING', 'SUCCESS', 'FAILED', 'EXPIRED']
+    VALID_STATUSES = ['PENDING', 'SUCCESS', 'FAILED', 'EXPIRED', 'BLOCKED']
     VALID_DEVICE_TYPES = ['phone', 'tablet', 'tv', 'laptop']
     
     def to_dict(self, include_package: bool = False) -> Dict[str, Any]:
-        """
-        Convert transaction to dictionary.
-        
-        Args:
-            include_package: Whether to include related package
-        
-        Returns:
-            Dictionary representation of the transaction
-        """
         data = {
             'id': self.id,
             'transaction_id': self.transaction_id,
@@ -213,6 +171,7 @@ class BillingTransaction(Base):
             'package_id': self.package_id,
             'status': self.status,
             'payment_reference': self.payment_reference,
+            'is_blocked': self.is_blocked if self.is_blocked is not None else False,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'expires_at': self.expires_at.isoformat() if self.expires_at else None,
@@ -226,38 +185,40 @@ class BillingTransaction(Base):
         return data
     
     def is_expired(self) -> bool:
-        """Check if transaction has expired."""
         if not self.expires_at:
             return False
         return datetime.now(timezone.utc) > self.expires_at
     
     def is_active(self) -> bool:
-        """Check if transaction is currently active."""
         return (
             self.status == 'SUCCESS' 
+            and not self.is_blocked
             and self.expires_at is not None 
             and not self.is_expired()
         )
     
     def mark_success(self, payment_reference: Optional[str] = None):
-        """Mark transaction as successful."""
         self.status = 'SUCCESS'
         if payment_reference:
             self.payment_reference = payment_reference
     
     def mark_failed(self, reason: Optional[str] = None):
-        """Mark transaction as failed."""
         self.status = 'FAILED'
         if reason:
             self.payment_reference = reason
     
     def mark_expired(self):
-        """Mark transaction as expired."""
         self.status = 'EXPIRED'
     
+    def mark_blocked(self):
+        self.is_blocked = True
+        self.status = 'BLOCKED'
+    
+    def mark_unblocked(self):
+        self.is_blocked = False
+    
     def __repr__(self) -> str:
-        """String representation."""
-        return f"<BillingTransaction(id={self.id}, phone='{self.phone_number}', amount=KES {self.amount}, status='{self.status}')>"
+        return f"<BillingTransaction(id={self.id}, phone='{self.phone_number}', amount=KES {self.amount}, status='{self.status}', blocked={self.is_blocked})>"
 
 
 class TVDevice(Base):
@@ -267,14 +228,10 @@ class TVDevice(Base):
     """
     __tablename__ = 'tv_devices'
     
-    # Primary Key
     id = Column(Integer, primary_key=True, index=True)
-    
-    # Device Information
     mac_address = Column(String(17), unique=True, nullable=False, index=True)
     device_name = Column(String(255), nullable=True)
     
-    # Foreign Key
     package_id = Column(
         Integer, 
         ForeignKey('internet_packages.id', ondelete='SET NULL'),
@@ -282,19 +239,14 @@ class TVDevice(Base):
         index=True
     )
     
-    # Status
     is_active = Column(Boolean, default=True, nullable=False, index=True)
-    
-    # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
     last_connected_at = Column(DateTime(timezone=True), nullable=True)
     
-    # Relationships
     package = relationship("InternetPackage", back_populates="tv_devices")
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary."""
         return {
             'id': self.id,
             'mac_address': self.mac_address,
@@ -308,7 +260,6 @@ class TVDevice(Base):
         }
     
     def is_expired(self) -> bool:
-        """Check if TV session has expired."""
         if not self.expires_at:
             return False
         return datetime.now(timezone.utc) > self.expires_at
@@ -324,29 +275,15 @@ class SystemSetting(Base):
     """
     __tablename__ = 'system_settings'
     
-    # Primary Key
     id = Column(Integer, primary_key=True, index=True)
-    
-    # Setting Information
     setting_key = Column(String(255), unique=True, nullable=False, index=True)
     setting_value = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     is_secret = Column(Boolean, default=False, nullable=False)
-    
-    # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     
     def to_dict(self, include_secret: bool = False) -> Dict[str, Any]:
-        """
-        Convert setting to dictionary.
-        
-        Args:
-            include_secret: Whether to include secret values
-        
-        Returns:
-            Dictionary representation of the setting
-        """
         if self.is_secret and not include_secret:
             return {
                 'id': self.id,
@@ -369,7 +306,6 @@ class SystemSetting(Base):
         }
     
     def __repr__(self) -> str:
-        """String representation."""
         return f"<SystemSetting(key='{self.setting_key}', secret={self.is_secret})>"
 
 
@@ -378,10 +314,7 @@ class SystemSetting(Base):
 # ============================================================================
 
 def create_default_packages() -> list:
-    """
-    Create default internet packages.
-    Returns list of InternetPackage objects.
-    """
+    """Create default internet packages."""
     return [
         InternetPackage(
             name='Hourly Pass',
@@ -427,10 +360,7 @@ def create_default_packages() -> list:
 
 
 def create_default_settings() -> list:
-    """
-    Create default system settings.
-    Returns list of SystemSetting objects.
-    """
+    """Create default system settings."""
     return [
         SystemSetting(
             setting_key='gateway_name',
@@ -476,10 +406,6 @@ def create_default_settings() -> list:
         ),
     ]
 
-
-# ============================================================================
-# Export Models
-# ============================================================================
 
 __all__ = [
     'InternetPackage',

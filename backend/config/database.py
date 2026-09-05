@@ -1,11 +1,12 @@
 """
 Lincoln's net - Database Configuration
-Shared Pooler connection + statement_cache_size=0
-FINAL VERSION - Works on Render with Supabase
+Shared Pooler + NullPool + statement_cache_size=0
+ABSOLUTE FINAL VERSION - Works on Render with Supabase PgBouncer
 """
 
 import urllib.parse
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
 from typing import AsyncGenerator, Dict, Any
@@ -14,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # ============================================================================
-# Database Configuration - SHARED POOLER (Render can reach this)
+# Database Configuration - SHARED POOLER
 # ============================================================================
 
 # Supabase Shared Pooler connection details
@@ -47,19 +48,21 @@ DATABASE_URL = get_database_url()
 logger.info(f"Database configured: {DB_HOST}:{DB_PORT}")
 
 # ============================================================================
-# Create Async Engine - WITH statement_cache_size=0
+# Create Async Engine - WITH NullPool + statement_cache_size=0
 # ============================================================================
 
-# CRITICAL: statement_cache_size=0 fixes PgBouncer prepared statement errors
+# CRITICAL FIXES:
+# 1. NullPool - Disables SQLAlchemy's own connection pooling
+#    (SQLAlchemy pooling conflicts with PgBouncer)
+# 2. statement_cache_size=0 - Disables prepared statements
+#    (PgBouncer doesn't support them)
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    pool_size=5,
-    max_overflow=10,
-    pool_pre_ping=True,
-    pool_recycle=300,
+    poolclass=NullPool,  # CRITICAL: No SQLAlchemy pooling
     connect_args={
-        "statement_cache_size": 0,  # CRITICAL: Fixes PgBouncer
+        "statement_cache_size": 0,  # CRITICAL: No prepared statements
+        "prepared_statement_cache_size": 0,  # Alternative setting
         "ssl": "require",
     },
 )

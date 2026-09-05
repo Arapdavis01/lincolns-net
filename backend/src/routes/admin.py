@@ -2,7 +2,7 @@
 Lincoln's net - Admin Routes
 Admin dashboard with REAL data API endpoints
 Includes: 24hr connections, users by plan, active sessions, recent transactions
-NEW: Manual RADIUS sync + User Management APIs
+NEW: Manual RADIUS sync + User Management + Hotspot Users APIs
 """
 
 from src.models.app_models import InternetPackage, BillingTransaction, SystemSetting, TVDevice
@@ -102,7 +102,227 @@ async def admin_login_api(request: Request):
 
 
 # ============================================================================
-# USER MANAGEMENT API (NEW)
+# HOTSPOT USERS API (NEW)
+# ============================================================================
+
+@router.get("/api/hotspot-users")
+async def get_hotspot_users_api(
+    search: Optional[str] = None,
+    plan_filter: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get active hotspot users (currently connected).
+    With search and plan filter.
+    """
+    try:
+        query = (
+            select(BillingTransaction, InternetPackage.name, InternetPackage.download_rate_limit, InternetPackage.upload_rate_limit)
+            .join(InternetPackage, BillingTransaction.package_id == InternetPackage.id)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.expires_at > datetime.utcnow())
+            .where(BillingTransaction.is_blocked == False)
+        )
+        
+        # Apply search
+        if search:
+            query = query.where(
+                or_(
+                    BillingTransaction.phone_number.contains(search),
+                    BillingTransaction.mac_address.contains(search)
+                )
+            )
+        
+        # Apply plan filter
+        if plan_filter:
+            query = query.where(InternetPackage.name == plan_filter)
+        
+        query = query.order_by(BillingTransaction.expires_at.asc())
+        
+        result = await db.execute(query)
+        active_connections = result.all()
+        
+        users = []
+        for tx, package_name, download_rate, upload_rate in active_connections:
+            time_left = tx.expires_at - datetime.utcnow()
+            hours_left = time_left.total_seconds() / 3600
+            
+            # Determine status based on time left
+            if hours_left > 1:
+                status = 'active'
+            elif hours_left > 0.25:
+                status = 'expiring'
+            else:
+                status = 'critical'
+            
+            users.append({
+                "transaction_id": tx.transaction_id,
+                "phone_number": tx.phone_number,
+                "mac_address": tx.mac_address,
+                "device_type": tx.device_type,
+                "package_name": package_name,
+                "download_rate": download_rate,
+                "upload_rate": upload_rate,
+                "amount": float(tx.amount),
+                "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                "expires_at": tx.expires_at.isoformat() if tx.expires_at else None,
+                "time_left_seconds": int(time_left.total_seconds()),
+                "status": status,
+            })
+        
+        return {
+            "success": True,
+            "users": users,
+            "total": len(users),
+        }
+    except Exception as e:
+        logger.error(f"Hotspot users error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.get("/api/hotspot-stats")
+async def get_hotspot_stats_api(db: AsyncSession = Depends(get_db)):
+    """Get hotspot statistics for cards."""
+    try:
+        now = datetime.utcnow()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Active connections
+        active_connections = await db.scalar(
+            select(func.count()).select_from(BillingTransaction)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.expires_at > now)
+        ) or 0
+        
+        # Today's connections
+        today_connections = await db.scalar(
+            select(func.count()).select_from(BillingTransaction)
+            .where(BillingTransaction.created_at >= today_start)
+        ) or 0
+        
+        # Expiring soon (less than 1 hour)
+        expiring_soon = await db.scalar(
+            select(func.count()).select_from(BillingTransaction)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.expires_at > now)
+            .where(BillingTransaction.expires_at < now + timedelta(hours=1))
+        ) or 0
+        
+        # Total today revenue
+        today_revenue = await db.scalar(
+            select(func.coalesce(func.sum(BillingTransaction.amount), 0))
+            .select_from(BillingTransaction)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.created_at >= today_start)
+        ) or 0
+        
+        return {
+            "success": True,
+            "active_connections": active_connections,
+            "today_connections": today_connections,
+            "expiring_soon": expiring_soon,
+            "today_revenue": float(today_revenue),
+        }
+    except Exception as e:
+        logger.error(f"Hotspot stats error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.get("/api/hotspot-users/{mac_address}")
+async def get_hotspot_user_details_api(mac_address: str, db: AsyncSession = Depends(get_db)):
+    """Get single hotspot user connection details."""
+    try:
+        result = await db.execute(
+            select(BillingTransaction, InternetPackage.name)
+            .join(InternetPackage, BillingTransaction.package_id == InternetPackage.id)
+            .where(BillingTransaction.mac_address == mac_address)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.expires_at > datetime.utcnow())
+            .limit(1)
+        )
+        connection = result.first()
+        
+        if not connection:
+            return JSONResponse(status_code=404, content={"success": False, "error": "Connection not found"})
+        
+        tx, package_name = connection
+        time_left = tx.expires_at - datetime.utcnow()
+        
+        return {
+            "success": True,
+            "connection": {
+                "transaction_id": tx.transaction_id,
+                "phone_number": tx.phone_number,
+                "mac_address": tx.mac_address,
+                "package_name": package_name,
+                "amount": float(tx.amount),
+                "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                "expires_at": tx.expires_at.isoformat() if tx.expires_at else None,
+                "time_left_seconds": int(time_left.total_seconds()),
+            },
+        }
+    except Exception as e:
+        logger.error(f"Hotspot user details error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.post("/api/hotspot-users/{mac_address}/disconnect")
+async def disconnect_hotspot_user_api(mac_address: str, db: AsyncSession = Depends(get_db)):
+    """Disconnect a hotspot user."""
+    try:
+        result = await db.execute(
+            select(BillingTransaction).where(
+                and_(
+                    BillingTransaction.mac_address == mac_address,
+                    BillingTransaction.status == 'SUCCESS',
+                    BillingTransaction.expires_at > datetime.utcnow()
+                )
+            )
+        )
+        transactions = result.scalars().all()
+        
+        for tx in transactions:
+            tx.status = 'EXPIRED'
+        
+        await db.commit()
+        
+        return {"success": True, "message": f"User {mac_address} disconnected"}
+    except Exception as e:
+        await db.rollback()
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.post("/api/hotspot-users/{mac_address}/extend")
+async def extend_hotspot_user_api(request: Request, mac_address: str, db: AsyncSession = Depends(get_db)):
+    """Extend a hotspot user's session."""
+    try:
+        data = await request.json()
+        extend_seconds = data.get("extend_seconds", 3600)  # Default 1 hour
+        
+        result = await db.execute(
+            select(BillingTransaction).where(
+                and_(
+                    BillingTransaction.mac_address == mac_address,
+                    BillingTransaction.status == 'SUCCESS',
+                    BillingTransaction.expires_at > datetime.utcnow()
+                )
+            )
+        )
+        transactions = result.scalars().all()
+        
+        for tx in transactions:
+            tx.expires_at = tx.expires_at + timedelta(seconds=extend_seconds)
+        
+        await db.commit()
+        
+        return {"success": True, "message": f"Session extended by {extend_seconds // 60} minutes"}
+    except Exception as e:
+        await db.rollback()
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# USER MANAGEMENT API (Unchanged - kept from previous)
 # ============================================================================
 
 @router.get("/api/users")
@@ -113,12 +333,8 @@ async def get_users_api(
     offset: int = 0,
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Get all users with statistics.
-    Groups by phone number with aggregate data.
-    """
+    """Get all users with statistics."""
     try:
-        # Base query - group by phone number
         query = (
             select(
                 BillingTransaction.phone_number,
@@ -133,24 +349,18 @@ async def get_users_api(
             .group_by(BillingTransaction.phone_number)
         )
         
-        # Apply search filter
         if search:
             query = query.where(BillingTransaction.phone_number.contains(search))
         
-        # Get total count
         count_query = select(func.count()).select_from(query.subquery())
         total_count = await db.scalar(count_query) or 0
         
-        # Apply pagination
         query = query.order_by(desc('last_seen')).limit(limit).offset(offset)
-        
         result = await db.execute(query)
         users_data = result.all()
         
-        # Check active status for each user
         users = []
         for row in users_data:
-            # Check if user has active session
             active_session = await db.scalar(
                 select(func.count()).select_from(BillingTransaction)
                 .where(
@@ -174,17 +384,10 @@ async def get_users_api(
                 "status": 'active' if active_session > 0 else 'inactive',
             })
         
-        # Filter by status if provided
         if status:
             users = [u for u in users if u['status'] == status]
         
-        return {
-            "success": True,
-            "users": users,
-            "total": total_count,
-            "limit": limit,
-            "offset": offset,
-        }
+        return {"success": True, "users": users, "total": total_count, "limit": limit, "offset": offset}
     except Exception as e:
         logger.error(f"Get users error: {str(e)}")
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
@@ -194,13 +397,11 @@ async def get_users_api(
 async def get_users_stats_api(db: AsyncSession = Depends(get_db)):
     """Get user statistics for cards."""
     try:
-        # Total unique users
         total_users = await db.scalar(
             select(func.count(func.distinct(BillingTransaction.phone_number)))
             .select_from(BillingTransaction)
         ) or 0
         
-        # Active users (have active session)
         active_users = await db.scalar(
             select(func.count(func.distinct(BillingTransaction.phone_number)))
             .select_from(BillingTransaction)
@@ -208,7 +409,6 @@ async def get_users_stats_api(db: AsyncSession = Depends(get_db)):
             .where(BillingTransaction.expires_at > datetime.utcnow())
         ) or 0
         
-        # New users today
         today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         new_today = await db.scalar(
             select(func.count(func.distinct(BillingTransaction.phone_number)))
@@ -216,7 +416,6 @@ async def get_users_stats_api(db: AsyncSession = Depends(get_db)):
             .where(BillingTransaction.created_at >= today_start)
         ) or 0
         
-        # Total revenue from all users
         total_revenue = await db.scalar(
             select(func.coalesce(func.sum(BillingTransaction.amount), 0))
             .select_from(BillingTransaction)
@@ -239,7 +438,6 @@ async def get_users_stats_api(db: AsyncSession = Depends(get_db)):
 async def get_user_details_api(phone_number: str, db: AsyncSession = Depends(get_db)):
     """Get user details with transaction history."""
     try:
-        # Get user transactions
         result = await db.execute(
             select(BillingTransaction)
             .where(BillingTransaction.phone_number == phone_number)
@@ -250,18 +448,15 @@ async def get_user_details_api(phone_number: str, db: AsyncSession = Depends(get
         if not transactions:
             return JSONResponse(status_code=404, content={"success": False, "error": "User not found"})
         
-        # Calculate stats
         total_spent = sum(float(tx.amount) for tx in transactions if tx.status == 'SUCCESS')
         transaction_count = len(transactions)
         
-        # Check active session
         active_session = None
         for tx in transactions:
             if tx.status == 'SUCCESS' and tx.expires_at and tx.expires_at > datetime.utcnow():
                 active_session = tx
                 break
         
-        # Get package names
         package_ids = [tx.package_id for tx in transactions if tx.package_id]
         packages_result = await db.execute(
             select(InternetPackage).where(InternetPackage.id.in_(package_ids))
@@ -305,7 +500,6 @@ async def get_user_details_api(phone_number: str, db: AsyncSession = Depends(get
 async def block_user_api(phone_number: str, db: AsyncSession = Depends(get_db)):
     """Block a user."""
     try:
-        # Expire all active sessions for this user
         result = await db.execute(
             select(BillingTransaction).where(
                 and_(
@@ -319,10 +513,10 @@ async def block_user_api(phone_number: str, db: AsyncSession = Depends(get_db)):
         
         for tx in transactions:
             tx.status = 'EXPIRED'
+            tx.is_blocked = True
         
         await db.commit()
-        
-        return {"success": True, "message": f"User {phone_number} blocked successfully"}
+        return {"success": True, "message": f"User {phone_number} blocked"}
     except Exception as e:
         await db.rollback()
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
@@ -331,11 +525,24 @@ async def block_user_api(phone_number: str, db: AsyncSession = Depends(get_db)):
 @router.post("/api/users/{phone_number}/unblock")
 async def unblock_user_api(phone_number: str, db: AsyncSession = Depends(get_db)):
     """Unblock a user."""
-    return {"success": True, "message": f"User {phone_number} unblocked"}
+    try:
+        result = await db.execute(
+            select(BillingTransaction).where(BillingTransaction.phone_number == phone_number)
+        )
+        transactions = result.scalars().all()
+        
+        for tx in transactions:
+            tx.is_blocked = False
+        
+        await db.commit()
+        return {"success": True, "message": f"User {phone_number} unblocked"}
+    except Exception as e:
+        await db.rollback()
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 
 # ============================================================================
-# DASHBOARD API - MAIN STATS (Unchanged)
+# DASHBOARD API - MAIN STATS (Unchanged - kept from previous)
 # ============================================================================
 
 @router.get("/api/dashboard-stats")
@@ -643,7 +850,7 @@ async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(ge
 
 
 # ============================================================================
-# PACKAGE MANAGEMENT API (Unchanged)
+# PACKAGE MANAGEMENT API (Unchanged - kept from previous)
 # ============================================================================
 
 @router.get("/api/packages")

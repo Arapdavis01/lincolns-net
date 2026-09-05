@@ -1,14 +1,14 @@
 """
 Lincoln's net - Admin Routes
-Admin dashboard and management endpoints with PayHero/Safaricom configuration
-Includes max_users, supports_tv, and support phone settings
+Admin dashboard with REAL data API endpoints
+Includes: 24hr connections, users by plan, active sessions, recent transactions
 """
 
 from src.models.app_models import InternetPackage, BillingTransaction, SystemSetting, TVDevice
 from fastapi import APIRouter, Request, Depends, HTTPException, BackgroundTasks, Response
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, desc, or_
+from sqlalchemy import select, func, and_, desc, or_, extract
 from config.database import get_db
 from src.models.payment_gateway import (
     PaymentGatewayAccount, 
@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Currency symbol
 CURRENCY_SYMBOL = "KES"
 
 
@@ -77,7 +76,7 @@ class SettingUpdate(BaseModel):
 
 
 # ============================================================================
-# AUTHENTICATION (JSON API)
+# AUTHENTICATION
 # ============================================================================
 
 @router.post("/api/login")
@@ -92,43 +91,29 @@ async def admin_login_api(request: Request):
         
         if username == settings.ADMIN_USERNAME and password == settings.ADMIN_PASSWORD:
             logger.info(f"Admin login successful: {username}")
-            return {
-                "success": True,
-                "message": "Login successful",
-                "token": "admin_session_token",
-            }
+            return {"success": True, "message": "Login successful"}
         else:
-            logger.warning(f"Failed login attempt: {username}")
-            return JSONResponse(
-                status_code=401,
-                content={"success": False, "message": "Invalid username or password"}
-            )
+            return JSONResponse(status_code=401, content={"success": False, "message": "Invalid username or password"})
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         return JSONResponse(status_code=500, content={"success": False, "message": str(e)})
 
 
 # ============================================================================
-# DASHBOARD API
+# DASHBOARD API - MAIN STATS
 # ============================================================================
 
 @router.get("/api/dashboard-stats")
 async def get_dashboard_stats_api(db: AsyncSession = Depends(get_db)):
-    """Get dashboard statistics as JSON."""
+    """Get comprehensive dashboard statistics with REAL data."""
     try:
-        total_packages = await db.scalar(select(func.count()).select_from(InternetPackage)) or 0
-        active_packages = await db.scalar(
-            select(func.count()).select_from(InternetPackage).where(InternetPackage.is_active == True)
-        ) or 0
-        
-        total_transactions = await db.scalar(select(func.count()).select_from(BillingTransaction)) or 0
-        
-        total_revenue = await db.scalar(
-            select(func.coalesce(func.sum(BillingTransaction.amount), 0))
+        # Total unique customers
+        total_customers = await db.scalar(
+            select(func.count(func.distinct(BillingTransaction.phone_number)))
             .select_from(BillingTransaction)
-            .where(BillingTransaction.status == 'SUCCESS')
         ) or 0
         
+        # Active customers (not expired)
         active_customers = await db.scalar(
             select(func.count(func.distinct(BillingTransaction.mac_address)))
             .select_from(BillingTransaction)
@@ -136,15 +121,45 @@ async def get_dashboard_stats_api(db: AsyncSession = Depends(get_db)):
             .where(BillingTransaction.expires_at > datetime.utcnow())
         ) or 0
         
-        total_tv_devices = await db.scalar(select(func.count()).select_from(TVDevice)) or 0
+        # Today's revenue
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_revenue = await db.scalar(
+            select(func.coalesce(func.sum(BillingTransaction.amount), 0))
+            .select_from(BillingTransaction)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.created_at >= today_start)
+        ) or 0
+        
+        # Total revenue
+        total_revenue = await db.scalar(
+            select(func.coalesce(func.sum(BillingTransaction.amount), 0))
+            .select_from(BillingTransaction)
+            .where(BillingTransaction.status == 'SUCCESS')
+        ) or 0
+        
+        # Total transactions
+        total_transactions = await db.scalar(
+            select(func.count()).select_from(BillingTransaction)
+        ) or 0
+        
+        # Total packages
+        total_packages = await db.scalar(
+            select(func.count()).select_from(InternetPackage)
+        ) or 0
+        
+        # Total TV devices
+        total_tv_devices = await db.scalar(
+            select(func.count()).select_from(TVDevice)
+        ) or 0
         
         return {
             "success": True,
-            "total_packages": total_packages,
-            "active_packages": active_packages,
-            "total_transactions": total_transactions,
-            "total_revenue": float(total_revenue),
+            "total_customers": total_customers,
             "active_customers": active_customers,
+            "today_revenue": float(today_revenue),
+            "total_revenue": float(total_revenue),
+            "total_transactions": total_transactions,
+            "total_packages": total_packages,
             "total_tv_devices": total_tv_devices,
             "currency": CURRENCY_SYMBOL,
         }
@@ -154,7 +169,214 @@ async def get_dashboard_stats_api(db: AsyncSession = Depends(get_db)):
 
 
 # ============================================================================
-# PACKAGE MANAGEMENT API
+# DASHBOARD API - 24HR CONNECTIONS
+# ============================================================================
+
+@router.get("/api/dashboard/connections-24hr")
+async def get_connections_24hr_api(db: AsyncSession = Depends(get_db)):
+    """Get hourly connection counts for last 24 hours."""
+    try:
+        now = datetime.utcnow()
+        start_time = now - timedelta(hours=24)
+        
+        result = await db.execute(
+            select(
+                extract('hour', BillingTransaction.created_at).label('hour'),
+                func.count(BillingTransaction.id).label('count')
+            )
+            .select_from(BillingTransaction)
+            .where(BillingTransaction.created_at >= start_time)
+            .group_by('hour')
+            .order_by('hour')
+        )
+        
+        hourly_data = result.all()
+        
+        # Create 24-hour array
+        connections = []
+        current_hour = now.hour
+        
+        for i in range(24):
+            hour = (current_hour - 23 + i) % 24
+            count = 0
+            
+            for row in hourly_data:
+                if row.hour == hour:
+                    count = row.count
+                    break
+            
+            connections.append({
+                "hour": f"{hour:02d}:00",
+                "count": count,
+            })
+        
+        return {
+            "success": True,
+            "connections": connections,
+        }
+    except Exception as e:
+        logger.error(f"24hr connections error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# DASHBOARD API - USERS BY PLAN
+# ============================================================================
+
+@router.get("/api/dashboard/users-by-plan")
+async def get_users_by_plan_api(db: AsyncSession = Depends(get_db)):
+    """Get user count grouped by package/plan."""
+    try:
+        result = await db.execute(
+            select(
+                InternetPackage.name.label('plan_name'),
+                InternetPackage.id.label('package_id'),
+                func.count(BillingTransaction.id).label('user_count')
+            )
+            .select_from(BillingTransaction)
+            .join(InternetPackage, BillingTransaction.package_id == InternetPackage.id)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .group_by(InternetPackage.name, InternetPackage.id)
+            .order_by(func.count(BillingTransaction.id).desc())
+        )
+        
+        plan_data = result.all()
+        
+        plans = [
+            {
+                "package_id": row.package_id,
+                "plan_name": row.plan_name,
+                "user_count": row.user_count,
+            }
+            for row in plan_data
+        ]
+        
+        return {
+            "success": True,
+            "plans": plans,
+        }
+    except Exception as e:
+        logger.error(f"Users by plan error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# DASHBOARD API - ACTIVE SESSIONS
+# ============================================================================
+
+@router.get("/api/dashboard/active-sessions")
+async def get_active_sessions_api(db: AsyncSession = Depends(get_db)):
+    """Get currently active sessions with REAL data."""
+    try:
+        result = await db.execute(
+            select(BillingTransaction, InternetPackage.name)
+            .join(InternetPackage, BillingTransaction.package_id == InternetPackage.id)
+            .where(BillingTransaction.status == 'SUCCESS')
+            .where(BillingTransaction.expires_at > datetime.utcnow())
+            .order_by(BillingTransaction.created_at.desc())
+            .limit(20)
+        )
+        
+        active_sessions = result.all()
+        
+        sessions = [
+            {
+                "transaction_id": tx.transaction_id,
+                "phone_number": tx.phone_number,
+                "mac_address": tx.mac_address,
+                "package_name": package_name,
+                "amount": float(tx.amount),
+                "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                "expires_at": tx.expires_at.isoformat() if tx.expires_at else None,
+                "device_type": tx.device_type,
+            }
+            for tx, package_name in active_sessions
+        ]
+        
+        return {
+            "success": True,
+            "sessions": sessions,
+            "total": len(sessions),
+        }
+    except Exception as e:
+        logger.error(f"Active sessions error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# DASHBOARD API - RECENT TRANSACTIONS
+# ============================================================================
+
+@router.get("/api/dashboard/recent-transactions")
+async def get_recent_transactions_api(limit: int = 5, db: AsyncSession = Depends(get_db)):
+    """Get latest 5 transactions."""
+    try:
+        result = await db.execute(
+            select(BillingTransaction)
+            .order_by(desc(BillingTransaction.created_at))
+            .limit(limit)
+        )
+        
+        transactions = result.scalars().all()
+        
+        return {
+            "success": True,
+            "transactions": [
+                {
+                    "transaction_id": tx.transaction_id,
+                    "phone_number": tx.phone_number,
+                    "amount": float(tx.amount),
+                    "status": tx.status,
+                    "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                }
+                for tx in transactions
+            ],
+        }
+    except Exception as e:
+        logger.error(f"Recent transactions error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# DASHBOARD API - DISCONNECT USER
+# ============================================================================
+
+@router.post("/api/disconnect-user")
+async def disconnect_user_api(request: Request, db: AsyncSession = Depends(get_db)):
+    """Disconnect a user by MAC address."""
+    try:
+        data = await request.json()
+        mac_address = data.get("mac_address", "")
+        
+        if not mac_address:
+            return JSONResponse(status_code=400, content={"success": False, "error": "MAC address required"})
+        
+        # Update transaction to expired
+        result = await db.execute(
+            select(BillingTransaction).where(
+                and_(
+                    BillingTransaction.mac_address == mac_address,
+                    BillingTransaction.status == 'SUCCESS',
+                    BillingTransaction.expires_at > datetime.utcnow()
+                )
+            )
+        )
+        transactions = result.scalars().all()
+        
+        for tx in transactions:
+            tx.status = 'EXPIRED'
+        
+        await db.commit()
+        
+        return {"success": True, "message": "User disconnected successfully"}
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Disconnect user error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# PACKAGE MANAGEMENT API (Unchanged)
 # ============================================================================
 
 @router.get("/api/packages")
@@ -183,7 +405,6 @@ async def create_package_api(request: Request, db: AsyncSession = Depends(get_db
     try:
         data = await request.json()
         
-        # Check for duplicate name
         existing = await db.scalar(
             select(InternetPackage).where(
                 func.lower(InternetPackage.name) == data.get("name", "").lower()
@@ -207,11 +428,9 @@ async def create_package_api(request: Request, db: AsyncSession = Depends(get_db
         await db.commit()
         await db.refresh(package)
         
-        logger.info(f"Package created: {package.name} (ID: {package.id})")
-        return {"success": True, "package": package.to_dict(), "message": "Package created successfully"}
+        return {"success": True, "package": package.to_dict(), "message": "Package created"}
     except Exception as e:
         await db.rollback()
-        logger.error(f"Create package error: {str(e)}")
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 
@@ -246,7 +465,6 @@ async def update_package_api(package_id: int, request: Request, db: AsyncSession
         if not package:
             return JSONResponse(status_code=404, content={"success": False, "error": "Package not found"})
         
-        # Update fields
         for key, value in data.items():
             if hasattr(package, key) and value is not None:
                 setattr(package, key, value)
@@ -254,8 +472,7 @@ async def update_package_api(package_id: int, request: Request, db: AsyncSession
         await db.commit()
         await db.refresh(package)
         
-        logger.info(f"Package updated: {package.name} (ID: {package.id})")
-        return {"success": True, "package": package.to_dict(), "message": "Package updated successfully"}
+        return {"success": True, "package": package.to_dict(), "message": "Package updated"}
     except Exception as e:
         await db.rollback()
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
@@ -283,7 +500,7 @@ async def delete_package_api(package_id: int, db: AsyncSession = Depends(get_db)
 
 
 # ============================================================================
-# SETTINGS API
+# SETTINGS API (Unchanged)
 # ============================================================================
 
 @router.get("/api/settings")
@@ -328,7 +545,7 @@ async def update_setting_api(request: Request, db: AsyncSession = Depends(get_db
 
 
 # ============================================================================
-# TRANSACTIONS API
+# TRANSACTIONS API (Unchanged)
 # ============================================================================
 
 @router.get("/api/transactions")
@@ -352,7 +569,7 @@ async def get_transactions_api(limit: int = 50, db: AsyncSession = Depends(get_d
 
 
 # ============================================================================
-# TV DEVICES API
+# TV DEVICES API (Unchanged)
 # ============================================================================
 
 @router.get("/api/tv-devices")

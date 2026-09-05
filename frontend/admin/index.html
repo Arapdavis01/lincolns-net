@@ -11,9 +11,7 @@
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-    <!-- ========================================================================
-    LOGIN VIEW
-    ======================================================================== -->
+    <!-- LOGIN VIEW (Unchanged) -->
     <div id="loginView" class="auth-container" style="display: none;">
         <div class="auth-card">
             <div class="auth-header">
@@ -54,9 +52,7 @@
         </div>
     </div>
     
-    <!-- ========================================================================
-    DASHBOARD VIEW
-    ======================================================================== -->
+    <!-- DASHBOARD VIEW -->
     <div id="dashboardView" class="dashboard-container dark-mode" style="display: none;">
         <!-- Sidebar inserted by admin.js -->
         
@@ -78,9 +74,7 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            DASHBOARD SECTION (UNCHANGED)
-            ============================================================ -->
+            <!-- DASHBOARD SECTION (Unchanged) -->
             <div id="dashboard-section">
                 <div class="dark-stats-grid">
                     <div class="dark-stat-card blue">
@@ -168,13 +162,10 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            USERS SECTION (ENHANCED)
-            ============================================================ -->
+            <!-- USERS SECTION (Unchanged - already enhanced) -->
             <div id="users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-users"></i> Users</h1>
                 
-                <!-- User Stats Cards -->
                 <div class="dark-stats-grid" style="margin-bottom: 20px;">
                     <div class="dark-stat-card blue">
                         <div class="dark-stat-icon blue"><i class="fas fa-users"></i></div>
@@ -198,7 +189,6 @@
                     </div>
                 </div>
                 
-                <!-- Search and Filter Bar -->
                 <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
                     <div class="input-group" style="flex:1;min-width:200px;">
                         <span class="input-icon"><i class="fas fa-search"></i></span>
@@ -216,7 +206,6 @@
                     </button>
                 </div>
                 
-                <!-- Users Table -->
                 <div class="dark-table-wrapper">
                     <table class="dark-table">
                         <thead>
@@ -235,28 +224,78 @@
                     </table>
                 </div>
                 
-                <!-- Pagination -->
                 <div id="usersPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;">
                     <!-- Filled dynamically -->
                 </div>
             </div>
             
             <!-- ============================================================
-            HOTSPOT USERS SECTION (UNCHANGED)
+            HOTSPOT USERS SECTION (ENHANCED)
             ============================================================ -->
             <div id="hotspot-users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-wifi"></i> Hotspot Users</h1>
+                
+                <!-- Hotspot Stats Cards -->
+                <div class="dark-stats-grid" style="margin-bottom: 20px;">
+                    <div class="dark-stat-card green">
+                        <div class="dark-stat-icon green"><i class="fas fa-wifi"></i></div>
+                        <div class="dark-stat-label">Active Connections</div>
+                        <div class="dark-stat-value" id="hotspotActiveConnections">0</div>
+                    </div>
+                    <div class="dark-stat-card blue">
+                        <div class="dark-stat-icon blue"><i class="fas fa-users"></i></div>
+                        <div class="dark-stat-label">Today's Connections</div>
+                        <div class="dark-stat-value" id="hotspotTodayConnections">0</div>
+                    </div>
+                    <div class="dark-stat-card yellow">
+                        <div class="dark-stat-icon yellow"><i class="fas fa-hourglass-half"></i></div>
+                        <div class="dark-stat-label">Expiring Soon</div>
+                        <div class="dark-stat-value" id="hotspotExpiringSoon">0</div>
+                    </div>
+                    <div class="dark-stat-card purple">
+                        <div class="dark-stat-icon purple"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="dark-stat-label">Today's Revenue</div>
+                        <div class="dark-stat-value" id="hotspotTodayRevenue">KES 0</div>
+                    </div>
+                </div>
+                
+                <!-- Search and Filter Bar -->
+                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+                    <div class="input-group" style="flex:1;min-width:200px;">
+                        <span class="input-icon"><i class="fas fa-search"></i></span>
+                        <input type="text" id="hotspotSearchInput" class="form-input" 
+                               placeholder="Search by phone or MAC..." 
+                               oninput="onHotspotSearchInput()">
+                    </div>
+                    <select id="hotspotPlanFilter" class="form-input" style="width:auto;min-width:150px;" onchange="filterHotspotByPlan()">
+                        <option value="">All Plans</option>
+                        <!-- Filled dynamically with packages -->
+                    </select>
+                    <button class="btn btn-primary" onclick="refreshHotspotNow()" title="Refresh Now">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+                
+                <!-- Last Updated Indicator -->
+                <div style="text-align:right;margin-bottom:8px;">
+                    <small id="hotspotLastUpdated" style="color:#a0aec0;">
+                        Last updated: Never
+                    </small>
+                </div>
+                
+                <!-- Hotspot Users Table -->
                 <div class="dark-table-wrapper">
                     <table class="dark-table">
                         <thead>
                             <tr>
-                                <th>Username</th>
+                                <th>User</th>
                                 <th>MAC Address</th>
                                 <th>Plan</th>
+                                <th>Bandwidth</th>
                                 <th>Time Left</th>
                                 <th>Start Time</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="hotspotUsersBody"></tbody>
@@ -264,9 +303,7 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            VOUCHERS SECTION (UNCHANGED)
-            ============================================================ -->
+            <!-- VOUCHERS SECTION (Unchanged) -->
             <div id="vouchers-section" style="display: none;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <h1 class="page-title" style="margin:0;"><i class="fas fa-ticket-alt"></i> Vouchers</h1>
@@ -292,9 +329,7 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            PLANS SECTION (UNCHANGED)
-            ============================================================ -->
+            <!-- PLANS SECTION (Unchanged) -->
             <div id="plans-section" style="display: none;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <h1 class="page-title" style="margin:0;"><i class="fas fa-box"></i> Plans</h1>
@@ -321,9 +356,7 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            PAYMENTS SECTION (UNCHANGED)
-            ============================================================ -->
+            <!-- PAYMENTS SECTION (Unchanged) -->
             <div id="payments-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-money-bill-wave"></i> Payments</h1>
                 <div class="dark-table-wrapper">
@@ -344,9 +377,7 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            REPORTS SECTION (UNCHANGED)
-            ============================================================ -->
+            <!-- REPORTS SECTION (Unchanged) -->
             <div id="reports-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-file-alt"></i> Reports</h1>
                 <div class="dark-stats-grid">
@@ -373,9 +404,7 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            SETTINGS SECTION (UNCHANGED)
-            ============================================================ -->
+            <!-- SETTINGS SECTION (Unchanged) -->
             <div id="settings-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-cog"></i> Settings</h1>
                 <div class="dark-chart-card">
@@ -388,24 +417,29 @@
         </div>
     </div>
     
-    <!-- ========================================================================
-    USER DETAIL MODAL (NEW)
-    ======================================================================== -->
+    <!-- USER DETAIL MODAL -->
     <div class="modal" id="userDetailModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
                 <h2><i class="fas fa-user"></i> User Details</h2>
                 <button class="modal-close" onclick="closeUserDetailModal()"><i class="fas fa-times"></i></button>
             </div>
-            <div id="userDetailContent">
-                <!-- Filled dynamically -->
-            </div>
+            <div id="userDetailContent"></div>
         </div>
     </div>
     
-    <!-- ========================================================================
-    PACKAGE MODAL (UNCHANGED)
-    ======================================================================== -->
+    <!-- HOTSPOT USER DETAIL MODAL (NEW) -->
+    <div class="modal" id="hotspotUserDetailModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-wifi"></i> Connection Details</h2>
+                <button class="modal-close" onclick="closeHotspotUserDetailModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="hotspotUserDetailContent"></div>
+        </div>
+    </div>
+    
+    <!-- PACKAGE MODAL (Unchanged) -->
     <div class="modal" id="packageModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -480,9 +514,7 @@
         </div>
     </div>
     
-    <!-- ========================================================================
-    MODULAR JAVASCRIPT
-    ======================================================================== -->
+    <!-- MODULAR JAVASCRIPT -->
     <script src="../js/admin.js"></script>
     <script src="../js/dashboard.js"></script>
     <script src="../js/users.js"></script>

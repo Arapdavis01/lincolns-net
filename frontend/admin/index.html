@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-    <!-- LOGIN VIEW -->
+    <!-- ========================================================================
+    LOGIN VIEW
+    ======================================================================== -->
     <div id="loginView" class="auth-container" style="display: none;">
         <div class="auth-card">
             <div class="auth-header">
@@ -52,9 +54,11 @@
         </div>
     </div>
     
-    <!-- DASHBOARD VIEW (Sidebar loaded dynamically) -->
+    <!-- ========================================================================
+    DASHBOARD VIEW (Sidebar loaded dynamically)
+    ======================================================================== -->
     <div id="dashboardView" class="dashboard-container dark-mode" style="display: none;">
-        <!-- Sidebar will be inserted here by admin.js -->
+        <!-- Sidebar inserted by admin.js -->
         
         <!-- Main Content -->
         <div class="main-content">
@@ -75,45 +79,47 @@
                 </div>
             </div>
             
-            <!-- DASHBOARD SECTION -->
+            <!-- ============================================================
+            DASHBOARD SECTION
+            ============================================================ -->
             <div id="dashboard-section">
-                <!-- Metric Cards -->
+                <!-- Row 1: Metric Cards -->
                 <div class="dark-stats-grid">
                     <div class="dark-stat-card blue">
                         <div class="dark-stat-icon blue"><i class="fas fa-users"></i></div>
                         <div class="dark-stat-label">Total Users</div>
                         <div class="dark-stat-value" id="totalUsers">0</div>
-                        <div class="dark-stat-subtitle">+ 2 this week</div>
+                        <div class="dark-stat-subtitle">All registered customers</div>
                     </div>
                     <div class="dark-stat-card green">
                         <div class="dark-stat-icon green"><i class="fas fa-wifi"></i></div>
                         <div class="dark-stat-label">Active Users</div>
                         <div class="dark-stat-value" id="activeUsers">0</div>
-                        <div class="dark-stat-subtitle">New update</div>
+                        <div class="dark-stat-subtitle">Currently connected</div>
                     </div>
                     <div class="dark-stat-card yellow">
                         <div class="dark-stat-icon yellow"><i class="fas fa-money-bill-wave"></i></div>
                         <div class="dark-stat-label">Today's Revenue</div>
                         <div class="dark-stat-value" id="todayRevenue">KES 0</div>
-                        <div class="dark-stat-subtitle">+ 34% from yesterday</div>
+                        <div class="dark-stat-subtitle">From today's transactions</div>
                     </div>
                     <div class="dark-stat-card purple">
                         <div class="dark-stat-icon purple"><i class="fas fa-chart-bar"></i></div>
                         <div class="dark-stat-label">Total Revenue</div>
                         <div class="dark-stat-value" id="totalRevenue">KES 0</div>
-                        <div class="dark-stat-subtitle">+ 2.5K this month</div>
+                        <div class="dark-stat-subtitle">All time revenue</div>
                     </div>
                 </div>
                 
-                <!-- Charts -->
+                <!-- Row 2: Charts (60/40 split) -->
                 <div class="charts-grid">
-                    <div class="dark-chart-card">
-                        <h3><i class="fas fa-chart-line"></i> User Connections</h3>
+                    <div class="dark-chart-card" style="flex: 3;">
+                        <h3><i class="fas fa-chart-line"></i> User Connections (24 Hours)</h3>
                         <div class="chart-container">
                             <canvas id="userConnectionsChart"></canvas>
                         </div>
                     </div>
-                    <div class="dark-chart-card">
+                    <div class="dark-chart-card" style="flex: 2;">
                         <h3><i class="fas fa-chart-pie"></i> Users by Plan</h3>
                         <div class="chart-container">
                             <canvas id="usersByPlanChart"></canvas>
@@ -121,18 +127,20 @@
                     </div>
                 </div>
                 
-                <!-- Connected Users Table -->
+                <!-- Row 3: Connected Users Table -->
                 <div class="dark-chart-card" style="margin-top: 20px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                         <h3><i class="fas fa-users"></i> Connected Users</h3>
-                        <button class="btn btn-primary btn-sm">View All Users</button>
+                        <button class="btn btn-primary btn-sm" onclick="showSection('hotspot-users')">
+                            <i class="fas fa-external-link-alt"></i> View All
+                        </button>
                     </div>
                     <div class="dark-table-wrapper">
                         <table class="dark-table">
                             <thead>
                                 <tr>
                                     <th>Username</th>
-                                    <th>IP Address</th>
+                                    <th>MAC Address</th>
                                     <th>Plan</th>
                                     <th>Time Left</th>
                                     <th>Start Time</th>
@@ -144,9 +152,34 @@
                         </table>
                     </div>
                 </div>
+                
+                <!-- Row 4: Recent Transactions (NEW) -->
+                <div class="dark-chart-card" style="margin-top: 20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3><i class="fas fa-clock"></i> Recent Transactions</h3>
+                        <button class="btn btn-primary btn-sm" onclick="showSection('payments')">
+                            <i class="fas fa-external-link-alt"></i> View All
+                        </button>
+                    </div>
+                    <div class="dark-table-wrapper">
+                        <table class="dark-table">
+                            <thead>
+                                <tr>
+                                    <th>Phone Number</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTransactionsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             
-            <!-- USERS SECTION -->
+            <!-- ============================================================
+            USERS SECTION
+            ============================================================ -->
             <div id="users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-users"></i> Users</h1>
                 <div class="dark-table-wrapper">
@@ -165,7 +198,9 @@
                 </div>
             </div>
             
-            <!-- HOTSPOT USERS SECTION -->
+            <!-- ============================================================
+            HOTSPOT USERS SECTION
+            ============================================================ -->
             <div id="hotspot-users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-wifi"></i> Hotspot Users</h1>
                 <div class="dark-table-wrapper">
@@ -186,7 +221,9 @@
                 </div>
             </div>
             
-            <!-- VOUCHERS SECTION -->
+            <!-- ============================================================
+            VOUCHERS SECTION
+            ============================================================ -->
             <div id="vouchers-section" style="display: none;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <h1 class="page-title" style="margin:0;"><i class="fas fa-ticket-alt"></i> Vouchers</h1>
@@ -212,7 +249,9 @@
                 </div>
             </div>
             
-            <!-- PLANS SECTION -->
+            <!-- ============================================================
+            PLANS SECTION
+            ============================================================ -->
             <div id="plans-section" style="display: none;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <h1 class="page-title" style="margin:0;"><i class="fas fa-box"></i> Plans</h1>
@@ -239,7 +278,9 @@
                 </div>
             </div>
             
-            <!-- PAYMENTS SECTION -->
+            <!-- ============================================================
+            PAYMENTS SECTION
+            ============================================================ -->
             <div id="payments-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-money-bill-wave"></i> Payments</h1>
                 <div class="dark-table-wrapper">
@@ -259,7 +300,9 @@
                 </div>
             </div>
             
-            <!-- REPORTS SECTION -->
+            <!-- ============================================================
+            REPORTS SECTION
+            ============================================================ -->
             <div id="reports-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-file-alt"></i> Reports</h1>
                 <div class="dark-stats-grid">
@@ -288,7 +331,9 @@
                 </div>
             </div>
             
-            <!-- SETTINGS SECTION -->
+            <!-- ============================================================
+            SETTINGS SECTION
+            ============================================================ -->
             <div id="settings-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-cog"></i> Settings</h1>
                 <div class="dark-chart-card">
@@ -301,7 +346,9 @@
         </div>
     </div>
     
-    <!-- MODALS -->
+    <!-- ========================================================================
+    PACKAGE MODAL
+    ======================================================================== -->
     <div class="modal" id="packageModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -310,6 +357,7 @@
             </div>
             <form id="packageForm">
                 <input type="hidden" id="packageId" value="">
+                
                 <div class="form-section">
                     <h3 class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</h3>
                     <div class="form-group">
@@ -321,6 +369,7 @@
                         <textarea class="form-input" id="packageDescription" rows="3"></textarea>
                     </div>
                 </div>
+                
                 <div class="form-section">
                     <h3 class="form-section-title"><i class="fas fa-money-bill-wave"></i> Pricing & Duration</h3>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -334,6 +383,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <div class="form-section">
                     <h3 class="form-section-title"><i class="fas fa-tachometer-alt"></i> Bandwidth</h3>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -347,6 +397,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <div class="form-section">
                     <h3 class="form-section-title"><i class="fas fa-devices"></i> Device Settings</h3>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -363,6 +414,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
                     <button type="button" class="btn btn-secondary" onclick="closePackageModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
@@ -371,7 +423,9 @@
         </div>
     </div>
     
-    <!-- MODULAR JAVASCRIPT -->
+    <!-- ========================================================================
+    MODULAR JAVASCRIPT
+    ======================================================================== -->
     <script src="../js/admin.js"></script>
     <script src="../js/dashboard.js"></script>
     <script src="../js/users.js"></script>

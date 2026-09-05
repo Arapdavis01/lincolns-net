@@ -1821,3 +1821,298 @@ body {
         font-size: 11px;
     }
 }
+/* ============================================================================
+   HOTSPOT USERS PAGE STYLES
+   Add these to the END of your styles.css
+   ============================================================================ */
+
+/* ============================================================================
+   TIME LEFT BADGE (Color Warnings)
+   ============================================================================ */
+
+.time-left-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.5px;
+}
+
+.time-left-badge.green {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+}
+
+.time-left-badge.yellow {
+    background: rgba(237, 137, 54, 0.2);
+    color: #ed8936;
+}
+
+.time-left-badge.orange {
+    background: rgba(229, 62, 62, 0.3);
+    color: #ff6b6b;
+    font-weight: 700;
+}
+
+.time-left-badge.red {
+    background: rgba(229, 62, 62, 0.2);
+    color: #e53e3e;
+    font-weight: 700;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ============================================================================
+   HOTSPOT STATS CARDS (Specific Colors)
+   ============================================================================ */
+
+.hotspot-stat-card {
+    background: var(--dark-card);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.hotspot-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.hotspot-stat-card.green::before { background: #48bb78; }
+.hotspot-stat-card.blue::before { background: #007bff; }
+.hotspot-stat-card.yellow::before { background: #ed8936; }
+.hotspot-stat-card.purple::before { background: #9f7aea; }
+
+/* ============================================================================
+   HOTSPOT TOOLBAR
+   ============================================================================ */
+
+.hotspot-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.hotspot-toolbar .input-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.hotspot-toolbar .form-input {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text);
+}
+
+.hotspot-toolbar .form-input:focus {
+    border-color: #007bff;
+}
+
+.hotspot-toolbar .form-input::placeholder {
+    color: var(--dark-gray);
+}
+
+/* ============================================================================
+   LAST UPDATED INDICATOR
+   ============================================================================ */
+
+.hotspot-last-updated {
+    text-align: right;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--dark-gray);
+}
+
+.hotspot-last-updated i {
+    margin-right: 4px;
+    color: #007bff;
+}
+
+/* ============================================================================
+   EXTEND SESSION BUTTON
+   ============================================================================ */
+
+.btn-extend {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+    border: 1px solid #48bb78;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-extend:hover {
+    background: #48bb78;
+    color: var(--white);
+}
+
+/* ============================================================================
+   SIGNAL STRENGTH BARS
+   ============================================================================ */
+
+.signal-bars {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 20px;
+}
+
+.signal-bar {
+    width: 4px;
+    border-radius: 2px;
+    background: var(--dark-gray);
+}
+
+.signal-bar:nth-child(1) { height: 5px; }
+.signal-bar:nth-child(2) { height: 9px; }
+.signal-bar:nth-child(3) { height: 13px; }
+.signal-bar:nth-child(4) { height: 17px; }
+
+.signal-bars.strong .signal-bar {
+    background: #48bb78;
+}
+
+.signal-bars.medium .signal-bar:nth-child(1),
+.signal-bars.medium .signal-bar:nth-child(2),
+.signal-bars.medium .signal-bar:nth-child(3) {
+    background: #ed8936;
+}
+
+.signal-bars.medium .signal-bar:nth-child(4) {
+    background: var(--dark-gray);
+}
+
+.signal-bars.weak .signal-bar:nth-child(1),
+.signal-bars.weak .signal-bar:nth-child(2) {
+    background: #e53e3e;
+}
+
+.signal-bars.weak .signal-bar:nth-child(3),
+.signal-bars.weak .signal-bar:nth-child(4) {
+    background: var(--dark-gray);
+}
+
+/* ============================================================================
+   CONNECTION PROGRESS BAR (in detail modal)
+   ============================================================================ */
+
+.connection-progress {
+    margin-bottom: 16px;
+}
+
+.connection-progress-label {
+    font-size: 11px;
+    color: var(--dark-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.connection-progress-bar {
+    background: var(--dark-sidebar);
+    border-radius: 20px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.connection-progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.5s ease;
+}
+
+.connection-progress-time {
+    text-align: center;
+    margin-top: 8px;
+    color: var(--dark-text);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* ============================================================================
+   HOTSPOT USER DETAIL MODAL
+   ============================================================================ */
+
+#hotspotUserDetailModal .modal-content {
+    max-width: 550px;
+}
+
+.hotspot-detail-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.hotspot-detail-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0 auto;
+}
+
+.hotspot-detail-name {
+    color: var(--dark-text);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 12px 0 4px;
+}
+
+/* ============================================================================
+   RESPONSIVE HOTSPOT PAGE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .hotspot-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .hotspot-toolbar .input-group {
+        min-width: 100%;
+    }
+    
+    .hotspot-toolbar select {
+        width: 100%;
+    }
+    
+    .hotspot-last-updated {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .time-left-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+    
+    .btn-extend {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+}

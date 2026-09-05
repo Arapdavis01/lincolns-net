@@ -2,13 +2,14 @@
 Lincoln's net - Customer Routes
 Customer-facing API endpoints for portal and payment
 Returns JSON only (frontend handles UI)
+Includes: Payment status check, active session check, TV connection
 """
 
 from src.models.app_models import InternetPackage, BillingTransaction, SystemSetting, TVDevice
 from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_, or_, func
 from config.database import get_db
 from typing import Optional, Dict, Any
 import logging
@@ -56,7 +57,7 @@ async def get_available_packages(db: AsyncSession = Depends(get_db)):
 async def get_public_settings(db: AsyncSession = Depends(get_db)):
     """
     Get public settings for customer portal.
-    Returns support phone and TV support status.
+    Returns support phone, TV support status, and gateway info.
     """
     try:
         result = await db.execute(
@@ -104,7 +105,6 @@ async def check_active_session(
                 content={"success": False, "error": "MAC address required"}
             )
         
-        # Validate MAC format
         if not validate_mac_address(mac):
             return JSONResponse(
                 status_code=400,
@@ -143,6 +143,129 @@ async def check_active_session(
         logger.error(f"Error checking session: {str(e)}")
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
+
+# ============================================================================
+# NEW: PAYMENT STATUS CHECK ENDPOINT
+# ============================================================================
+
+@router.get("/api/payment-status/{transaction_id}")
+async def get_payment_status(
+    transaction_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Check payment status for a transaction.
+    Used by customer to verify if payment went through.
+    """
+    try:
+        if not transaction_id:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Transaction ID required"}
+            )
+        
+        result = await db.execute(
+            select(BillingTransaction)
+            .where(BillingTransaction.transaction_id == transaction_id)
+        )
+        transaction = result.scalar_one_or_none()
+        
+        if not transaction:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "error": "Transaction not found"}
+            )
+        
+        # Determine status message
+        status_messages = {
+            'PENDING': 'Payment is being processed. Please wait...',
+            'SUCCESS': 'Payment successful! You can now connect to WiFi.',
+            'FAILED': 'Payment failed. Please try again.',
+            'EXPIRED': 'Payment expired. Please initiate a new payment.',
+        }
+        
+        return {
+            "success": True,
+            "transaction_id": transaction.transaction_id,
+            "status": transaction.status,
+            "message": status_messages.get(transaction.status, 'Unknown status'),
+            "amount": float(transaction.amount),
+            "phone_number": transaction.phone_number,
+            "created_at": transaction.created_at.isoformat() if transaction.created_at else None,
+            "expires_at": transaction.expires_at.isoformat() if transaction.expires_at else None,
+        }
+    except Exception as e:
+        logger.error(f"Error checking payment status: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# NEW: CHECK PAYMENT BY PHONE NUMBER
+# ============================================================================
+
+@router.get("/api/check-payment-by-phone")
+async def check_payment_by_phone(
+    phone_number: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Check if a phone number has any active or recent transactions.
+    Used for "Check my payment" feature.
+    """
+    try:
+        if not phone_number:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "Phone number required"}
+            )
+        
+        # Find recent transactions for this phone
+        result = await db.execute(
+            select(BillingTransaction)
+            .where(BillingTransaction.phone_number.contains(phone_number))
+            .order_by(BillingTransaction.created_at.desc())
+            .limit(5)
+        )
+        transactions = result.scalars().all()
+        
+        if not transactions:
+            return {
+                "success": True,
+                "has_transactions": False,
+                "message": "No transactions found for this phone number",
+            }
+        
+        # Check for active session
+        active_transaction = None
+        for tx in transactions:
+            if tx.status == 'SUCCESS' and tx.expires_at and tx.expires_at > datetime.utcnow():
+                active_transaction = tx
+                break
+        
+        return {
+            "success": True,
+            "has_transactions": True,
+            "has_active_session": active_transaction is not None,
+            "recent_transactions": [
+                {
+                    "transaction_id": tx.transaction_id,
+                    "status": tx.status,
+                    "amount": float(tx.amount),
+                    "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                    "expires_at": tx.expires_at.isoformat() if tx.expires_at else None,
+                }
+                for tx in transactions[:3]  # Return latest 3
+            ],
+            "active_transaction": active_transaction.to_dict() if active_transaction else None,
+        }
+    except Exception as e:
+        logger.error(f"Error checking payment by phone: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# PAYMENT INITIATION
+# ============================================================================
 
 @router.post("/api/pay")
 async def initiate_payment(
@@ -183,7 +306,6 @@ async def initiate_payment(
                 phonenumbers.PhoneNumberFormat.E164
             )
         except phonenumbers.NumberParseException:
-            # Try basic validation if phonenumbers fails
             if not re.match(r'^\+?[0-9]{10,15}$', phone_number):
                 return JSONResponse(
                     status_code=400,
@@ -202,7 +324,7 @@ async def initiate_payment(
                 content={"success": False, "error": "Package not found or inactive"}
             )
         
-        # Check device limit if max_users > 1
+        # Check device limit
         if package.max_users > 1 and mac:
             active_devices = await db.scalar(
                 select(func.count()).select_from(BillingTransaction)
@@ -269,16 +391,13 @@ async def connect_tv(
         data = await request.json()
         tv_mac = data.get("tv_mac", "")
         package_id = data.get("package_id")
-        phone_number = data.get("phone_number", "")
         
-        # Validate MAC address
         if not validate_mac_address(tv_mac):
             return JSONResponse(
                 status_code=400,
                 content={"success": False, "error": "Invalid TV MAC address"}
             )
         
-        # Check if TV already connected
         existing_tv = await db.scalar(
             select(TVDevice).where(TVDevice.mac_address == tv_mac)
         )
@@ -291,7 +410,6 @@ async def connect_tv(
                 "device": existing_tv.to_dict(),
             }
         
-        # If package provided, create TV device with package
         if package_id:
             result = await db.execute(
                 select(InternetPackage).where(InternetPackage.id == int(package_id))
@@ -304,17 +422,12 @@ async def connect_tv(
                     content={"success": False, "error": "Package does not support TV connections"}
                 )
             
-            # Create or update TV device
             if existing_tv:
                 existing_tv.package_id = package.id
                 existing_tv.is_active = True
                 existing_tv.expires_at = datetime.utcnow() + timedelta(seconds=package.duration_seconds)
                 await db.commit()
-                return {
-                    "success": True,
-                    "message": "TV connected successfully",
-                    "device": existing_tv.to_dict(),
-                }
+                return {"success": True, "message": "TV connected", "device": existing_tv.to_dict()}
             else:
                 tv_device = TVDevice(
                     mac_address=tv_mac,
@@ -325,15 +438,11 @@ async def connect_tv(
                 db.add(tv_device)
                 await db.commit()
                 await db.refresh(tv_device)
-                return {
-                    "success": True,
-                    "message": "TV connected successfully",
-                    "device": tv_device.to_dict(),
-                }
+                return {"success": True, "message": "TV connected", "device": tv_device.to_dict()}
         else:
             return JSONResponse(
                 status_code=400,
-                content={"success": False, "error": "Package ID required for TV connection"}
+                content={"success": False, "error": "Package ID required"}
             )
     except Exception as e:
         logger.error(f"TV connection error: {str(e)}")

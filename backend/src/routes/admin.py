@@ -2,6 +2,7 @@
 Lincoln's net - Admin Routes
 Admin dashboard with REAL data API endpoints
 Includes: 24hr connections, users by plan, active sessions, recent transactions
+NEW: Manual RADIUS sync endpoint for failed auto-syncs
 """
 
 from src.models.app_models import InternetPackage, BillingTransaction, SystemSetting, TVDevice
@@ -16,6 +17,7 @@ from src.models.payment_gateway import (
     PaymentGatewayLog
 )
 from src.services.payhero_service import PayHeroService
+from src.services.radius_sync import sync_to_radius
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, validator
 import logging
@@ -107,13 +109,11 @@ async def admin_login_api(request: Request):
 async def get_dashboard_stats_api(db: AsyncSession = Depends(get_db)):
     """Get comprehensive dashboard statistics with REAL data."""
     try:
-        # Total unique customers
         total_customers = await db.scalar(
             select(func.count(func.distinct(BillingTransaction.phone_number)))
             .select_from(BillingTransaction)
         ) or 0
         
-        # Active customers (not expired)
         active_customers = await db.scalar(
             select(func.count(func.distinct(BillingTransaction.mac_address)))
             .select_from(BillingTransaction)
@@ -121,7 +121,6 @@ async def get_dashboard_stats_api(db: AsyncSession = Depends(get_db)):
             .where(BillingTransaction.expires_at > datetime.utcnow())
         ) or 0
         
-        # Today's revenue
         today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         today_revenue = await db.scalar(
             select(func.coalesce(func.sum(BillingTransaction.amount), 0))
@@ -130,24 +129,20 @@ async def get_dashboard_stats_api(db: AsyncSession = Depends(get_db)):
             .where(BillingTransaction.created_at >= today_start)
         ) or 0
         
-        # Total revenue
         total_revenue = await db.scalar(
             select(func.coalesce(func.sum(BillingTransaction.amount), 0))
             .select_from(BillingTransaction)
             .where(BillingTransaction.status == 'SUCCESS')
         ) or 0
         
-        # Total transactions
         total_transactions = await db.scalar(
             select(func.count()).select_from(BillingTransaction)
         ) or 0
         
-        # Total packages
         total_packages = await db.scalar(
             select(func.count()).select_from(InternetPackage)
         ) or 0
         
-        # Total TV devices
         total_tv_devices = await db.scalar(
             select(func.count()).select_from(TVDevice)
         ) or 0
@@ -192,7 +187,6 @@ async def get_connections_24hr_api(db: AsyncSession = Depends(get_db)):
         
         hourly_data = result.all()
         
-        # Create 24-hour array
         connections = []
         current_hour = now.hour
         
@@ -205,15 +199,9 @@ async def get_connections_24hr_api(db: AsyncSession = Depends(get_db)):
                     count = row.count
                     break
             
-            connections.append({
-                "hour": f"{hour:02d}:00",
-                "count": count,
-            })
+            connections.append({"hour": f"{hour:02d}:00", "count": count})
         
-        return {
-            "success": True,
-            "connections": connections,
-        }
+        return {"success": True, "connections": connections}
     except Exception as e:
         logger.error(f"24hr connections error: {str(e)}")
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
@@ -243,18 +231,11 @@ async def get_users_by_plan_api(db: AsyncSession = Depends(get_db)):
         plan_data = result.all()
         
         plans = [
-            {
-                "package_id": row.package_id,
-                "plan_name": row.plan_name,
-                "user_count": row.user_count,
-            }
+            {"package_id": row.package_id, "plan_name": row.plan_name, "user_count": row.user_count}
             for row in plan_data
         ]
         
-        return {
-            "success": True,
-            "plans": plans,
-        }
+        return {"success": True, "plans": plans}
     except Exception as e:
         logger.error(f"Users by plan error: {str(e)}")
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
@@ -293,11 +274,7 @@ async def get_active_sessions_api(db: AsyncSession = Depends(get_db)):
             for tx, package_name in active_sessions
         ]
         
-        return {
-            "success": True,
-            "sessions": sessions,
-            "total": len(sessions),
-        }
+        return {"success": True, "sessions": sessions, "total": len(sessions)}
     except Exception as e:
         logger.error(f"Active sessions error: {str(e)}")
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
@@ -351,7 +328,6 @@ async def disconnect_user_api(request: Request, db: AsyncSession = Depends(get_d
         if not mac_address:
             return JSONResponse(status_code=400, content={"success": False, "error": "MAC address required"})
         
-        # Update transaction to expired
         result = await db.execute(
             select(BillingTransaction).where(
                 and_(
@@ -376,7 +352,74 @@ async def disconnect_user_api(request: Request, db: AsyncSession = Depends(get_d
 
 
 # ============================================================================
-# PACKAGE MANAGEMENT API (Unchanged)
+# NEW: MANUAL RADIUS SYNC ENDPOINT
+# ============================================================================
+
+@router.post("/api/manual-radius-sync")
+async def manual_radius_sync_api(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Manually sync a transaction to RADIUS.
+    Used when auto-sync failed after payment.
+    """
+    try:
+        data = await request.json()
+        transaction_id = data.get("transaction_id", "")
+        
+        if not transaction_id:
+            return JSONResponse(status_code=400, content={"success": False, "error": "Transaction ID required"})
+        
+        # Find the transaction
+        result = await db.execute(
+            select(BillingTransaction)
+            .where(BillingTransaction.transaction_id == transaction_id)
+        )
+        transaction = result.scalar_one_or_none()
+        
+        if not transaction:
+            return JSONResponse(status_code=404, content={"success": False, "error": "Transaction not found"})
+        
+        if transaction.status != 'SUCCESS':
+            return JSONResponse(status_code=400, content={"success": False, "error": "Transaction is not successful"})
+        
+        # Get package details
+        result = await db.execute(
+            select(InternetPackage).where(InternetPackage.id == transaction.package_id)
+        )
+        package = result.scalar_one_or_none()
+        
+        if not package:
+            return JSONResponse(status_code=404, content={"success": False, "error": "Package not found"})
+        
+        # Sync to RADIUS
+        try:
+            await sync_to_radius(
+                transaction.mac_address,
+                package.duration_seconds,
+                package.download_rate_limit,
+                package.upload_rate_limit
+            )
+            
+            logger.info(f"Manual RADIUS sync successful for: {transaction.mac_address}")
+            
+            return {
+                "success": True,
+                "message": "RADIUS sync completed successfully",
+                "mac_address": transaction.mac_address,
+                "package": package.name,
+            }
+        except Exception as sync_error:
+            logger.error(f"Manual RADIUS sync failed: {str(sync_error)}")
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "error": f"RADIUS sync failed: {str(sync_error)}"}
+            )
+    except Exception as e:
+        logger.error(f"Manual sync error: {str(e)}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+# ============================================================================
+# PACKAGE MANAGEMENT API
 # ============================================================================
 
 @router.get("/api/packages")
@@ -500,7 +543,7 @@ async def delete_package_api(package_id: int, db: AsyncSession = Depends(get_db)
 
 
 # ============================================================================
-# SETTINGS API (Unchanged)
+# SETTINGS API
 # ============================================================================
 
 @router.get("/api/settings")
@@ -545,7 +588,7 @@ async def update_setting_api(request: Request, db: AsyncSession = Depends(get_db
 
 
 # ============================================================================
-# TRANSACTIONS API (Unchanged)
+# TRANSACTIONS API
 # ============================================================================
 
 @router.get("/api/transactions")
@@ -569,7 +612,7 @@ async def get_transactions_api(limit: int = 50, db: AsyncSession = Depends(get_d
 
 
 # ============================================================================
-# TV DEVICES API (Unchanged)
+# TV DEVICES API
 # ============================================================================
 
 @router.get("/api/tv-devices")

@@ -408,3 +408,77 @@ async function showDashboard() {
     // Load dashboard section
     loadSection('dashboard');
 }
+// ============================================================================
+// NOTIFICATION BELL
+// ============================================================================
+
+async function loadNotifications() {
+    const token = getAuthToken();
+    const badge = document.querySelector('.notification-bell .badge');
+    
+    if (!badge) return;
+    
+    try {
+        // Fetch recent transactions as notifications
+        const response = await fetch(`${BACKEND_URL}/admin/api/dashboard/recent-transactions?limit=10`, {
+            headers: { 'Authorization': 'Basic ' + token },
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.transactions.length > 0) {
+            // Update badge count
+            badge.textContent = data.transactions.length;
+            badge.style.display = 'block';
+            
+            // Store notifications for later
+            window.pendingNotifications = data.transactions;
+        } else {
+            badge.style.display = 'none';
+            window.pendingNotifications = [];
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        badge.style.display = 'none';
+    }
+}
+
+function showNotificationsAlert() {
+    const notifications = window.pendingNotifications || [];
+    
+    if (notifications.length === 0) {
+        alert('No new notifications');
+        return;
+    }
+    
+    // Build message
+    let message = `You have ${notifications.length} recent transactions:\n\n`;
+    
+    notifications.forEach((tx, index) => {
+        message += `${index + 1}. ${tx.phone_number} - ${formatCurrency(tx.amount)} - ${tx.status}\n`;
+    });
+    
+    alert(message);
+}
+
+// ============================================================================
+// UPDATE showDashboard to load notifications
+// ============================================================================
+
+async function showDashboard() {
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('dashboardView').style.display = 'flex';
+    document.getElementById('dashboardView').classList.add('dark-mode');
+    
+    // Load sidebar if needed
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) {
+        await loadSidebar();
+    }
+    
+    // Load notifications
+    loadNotifications();
+    
+    // Load dashboard
+    loadSection('dashboard');
+}

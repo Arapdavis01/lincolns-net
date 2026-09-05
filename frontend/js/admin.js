@@ -150,7 +150,7 @@ async function handleLogin(e) {
 }
 
 // ============================================================================
-// NOTIFICATION SYSTEM (Toast)
+// TOAST NOTIFICATION SYSTEM
 // ============================================================================
 
 function showNotification(message, type = 'info') {
@@ -181,7 +181,7 @@ function getNotificationIcon(type) {
 }
 
 // ============================================================================
-// NOTIFICATION BELL
+// NOTIFICATION BELL WITH DROPDOWN PANEL
 // ============================================================================
 
 async function loadNotifications() {
@@ -208,49 +208,139 @@ async function loadNotifications() {
     } catch (error) {
         console.error('Error loading notifications:', error);
         badge.style.display = 'none';
+        window.pendingNotifications = [];
     }
 }
 
-function showNotificationsAlert() {
+function toggleNotificationsPanel(event) {
+    event.stopPropagation();
+    
+    let panel = document.getElementById('notificationsPanel');
+    
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'notificationsPanel';
+        panel.className = 'notifications-panel';
+        document.body.appendChild(panel);
+    }
+    
+    if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+    } else {
+        panel.classList.add('open');
+        renderNotificationsContent();
+    }
+}
+
+function renderNotificationsContent() {
+    const panel = document.getElementById('notificationsPanel');
+    if (!panel) return;
+    
     const notifications = window.pendingNotifications || [];
     
     if (notifications.length === 0) {
-        alert('No new notifications');
-        return;
+        panel.innerHTML = `
+            <div class="notifications-header">
+                <h3><i class="fas fa-bell"></i> Notifications</h3>
+                <button onclick="closeNotificationsPanel()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="notifications-empty">
+                <i class="fas fa-bell-slash"></i>
+                <p>No new notifications</p>
+                <small>You're all caught up!</small>
+            </div>
+        `;
+    } else {
+        panel.innerHTML = `
+            <div class="notifications-header">
+                <h3><i class="fas fa-bell"></i> Notifications</h3>
+                <button onclick="closeNotificationsPanel()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="notifications-list">
+                ${notifications.map((tx) => `
+                    <div class="notification-item">
+                        <div class="notification-icon ${getStatusColor(tx.status)}">
+                            <i class="fas fa-${getStatusIcon(tx.status)}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <p class="notification-message">
+                                <strong>${tx.phone_number}</strong> paid 
+                                <strong>${formatCurrency(tx.amount)}</strong>
+                            </p>
+                            <small class="notification-time">${new Date(tx.created_at).toLocaleTimeString()}</small>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="notifications-footer">
+                <button onclick="markAllRead()"><i class="fas fa-check-double"></i> Mark all as read</button>
+            </div>
+        `;
     }
-    
-    let message = `You have ${notifications.length} recent transactions:\n\n`;
-    
-    notifications.forEach((tx, index) => {
-        message += `${index + 1}. ${tx.phone_number} - ${formatCurrency(tx.amount)} - ${tx.status}\n`;
-    });
-    
-    alert(message);
 }
+
+function closeNotificationsPanel() {
+    const panel = document.getElementById('notificationsPanel');
+    if (panel) panel.classList.remove('open');
+}
+
+function markAllRead() {
+    const badge = document.getElementById('notificationBadge');
+    if (badge) badge.style.display = 'none';
+    window.pendingNotifications = [];
+    closeNotificationsPanel();
+    showNotification('All notifications marked as read', 'success');
+}
+
+function getStatusIcon(status) {
+    switch (status.toLowerCase()) {
+        case 'success': return 'check-circle';
+        case 'pending': return 'clock';
+        case 'failed': return 'times-circle';
+        default: return 'info-circle';
+    }
+}
+
+function getStatusColor(status) {
+    switch (status.toLowerCase()) {
+        case 'success': return 'green';
+        case 'pending': return 'yellow';
+        case 'failed': return 'red';
+        default: return 'gray';
+    }
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', function(event) {
+    const panel = document.getElementById('notificationsPanel');
+    const bell = document.querySelector('.notification-bell');
+    
+    if (panel && panel.classList.contains('open') && 
+        !panel.contains(event.target) && 
+        bell && !bell.contains(event.target)) {
+        panel.classList.remove('open');
+    }
+});
 
 // ============================================================================
 // NAVIGATION SYSTEM
 // ============================================================================
 
 function showSection(section) {
-    // Hide all sections
     document.querySelectorAll('[id$="-section"]').forEach(el => {
         el.style.display = 'none';
     });
     
-    // Show selected section
     const sectionElement = document.getElementById(section + '-section');
     if (sectionElement) {
         sectionElement.style.display = 'block';
     }
     
-    // Update page title
     const pageTitle = document.getElementById('pageTitle');
     if (pageTitle) {
         pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace(/-/g, ' ');
     }
     
-    // Update nav links
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
@@ -260,10 +350,8 @@ function showSection(section) {
         if (navLink) navLink.classList.add('active');
     }
     
-    // Load section data
     loadSection(section);
     
-    // Close sidebar on mobile
     if (window.innerWidth <= 768) {
         const sidebar = document.getElementById('sidebar');
         if (sidebar) sidebar.classList.remove('open');

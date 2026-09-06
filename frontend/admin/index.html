@@ -81,25 +81,21 @@
                         <div class="dark-stat-icon blue"><i class="fas fa-users"></i></div>
                         <div class="dark-stat-label">Total Users</div>
                         <div class="dark-stat-value" id="totalUsers">0</div>
-                        <div class="dark-stat-subtitle">All registered customers</div>
                     </div>
                     <div class="dark-stat-card green">
                         <div class="dark-stat-icon green"><i class="fas fa-wifi"></i></div>
                         <div class="dark-stat-label">Active Users</div>
                         <div class="dark-stat-value" id="activeUsers">0</div>
-                        <div class="dark-stat-subtitle">Currently connected</div>
                     </div>
                     <div class="dark-stat-card yellow">
                         <div class="dark-stat-icon yellow"><i class="fas fa-money-bill-wave"></i></div>
                         <div class="dark-stat-label">Today's Revenue</div>
                         <div class="dark-stat-value" id="todayRevenue">KES 0</div>
-                        <div class="dark-stat-subtitle">From today's transactions</div>
                     </div>
                     <div class="dark-stat-card purple">
                         <div class="dark-stat-icon purple"><i class="fas fa-chart-bar"></i></div>
                         <div class="dark-stat-label">Total Revenue</div>
                         <div class="dark-stat-value" id="totalRevenue">KES 0</div>
-                        <div class="dark-stat-subtitle">All time revenue</div>
                     </div>
                 </div>
                 
@@ -162,7 +158,7 @@
                 </div>
             </div>
             
-            <!-- USERS SECTION (Unchanged - already enhanced) -->
+            <!-- USERS SECTION (Unchanged) -->
             <div id="users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-users"></i> Users</h1>
                 
@@ -224,18 +220,13 @@
                     </table>
                 </div>
                 
-                <div id="usersPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;">
-                    <!-- Filled dynamically -->
-                </div>
+                <div id="usersPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;"></div>
             </div>
             
-            <!-- ============================================================
-            HOTSPOT USERS SECTION (ENHANCED)
-            ============================================================ -->
+            <!-- HOTSPOT USERS SECTION (Unchanged - already enhanced) -->
             <div id="hotspot-users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-wifi"></i> Hotspot Users</h1>
                 
-                <!-- Hotspot Stats Cards -->
                 <div class="dark-stats-grid" style="margin-bottom: 20px;">
                     <div class="dark-stat-card green">
                         <div class="dark-stat-icon green"><i class="fas fa-wifi"></i></div>
@@ -259,7 +250,6 @@
                     </div>
                 </div>
                 
-                <!-- Search and Filter Bar -->
                 <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
                     <div class="input-group" style="flex:1;min-width:200px;">
                         <span class="input-icon"><i class="fas fa-search"></i></span>
@@ -269,21 +259,16 @@
                     </div>
                     <select id="hotspotPlanFilter" class="form-input" style="width:auto;min-width:150px;" onchange="filterHotspotByPlan()">
                         <option value="">All Plans</option>
-                        <!-- Filled dynamically with packages -->
                     </select>
-                    <button class="btn btn-primary" onclick="refreshHotspotNow()" title="Refresh Now">
+                    <button class="btn btn-primary" onclick="refreshHotspotNow()">
                         <i class="fas fa-sync"></i> Refresh
                     </button>
                 </div>
                 
-                <!-- Last Updated Indicator -->
                 <div style="text-align:right;margin-bottom:8px;">
-                    <small id="hotspotLastUpdated" style="color:#a0aec0;">
-                        Last updated: Never
-                    </small>
+                    <small id="hotspotLastUpdated" style="color:#a0aec0;">Last updated: Never</small>
                 </div>
                 
-                <!-- Hotspot Users Table -->
                 <div class="dark-table-wrapper">
                     <table class="dark-table">
                         <thead>
@@ -329,15 +314,79 @@
                 </div>
             </div>
             
-            <!-- PLANS SECTION (Unchanged) -->
+            <!-- ============================================================
+            PLANS SECTION (ENHANCED)
+            ============================================================ -->
             <div id="plans-section" style="display: none;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                    <h1 class="page-title" style="margin:0;"><i class="fas fa-box"></i> Plans</h1>
-                    <button class="btn btn-primary" onclick="openPackageModal()">
+                <h1 class="page-title"><i class="fas fa-box"></i> Plans</h1>
+                
+                <!-- Plans Stats Cards -->
+                <div class="dark-stats-grid" style="margin-bottom: 20px;">
+                    <div class="dark-stat-card blue">
+                        <div class="dark-stat-icon blue"><i class="fas fa-box"></i></div>
+                        <div class="dark-stat-label">Total Plans</div>
+                        <div class="dark-stat-value" id="plansTotalCount">0</div>
+                    </div>
+                    <div class="dark-stat-card green">
+                        <div class="dark-stat-icon green"><i class="fas fa-check-circle"></i></div>
+                        <div class="dark-stat-label">Active Plans</div>
+                        <div class="dark-stat-value" id="plansActiveCount">0</div>
+                    </div>
+                    <div class="dark-stat-card yellow">
+                        <div class="dark-stat-icon yellow"><i class="fas fa-tv"></i></div>
+                        <div class="dark-stat-label">TV Plans</div>
+                        <div class="dark-stat-value" id="plansTvCount">0</div>
+                    </div>
+                    <div class="dark-stat-card purple">
+                        <div class="dark-stat-icon purple"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="dark-stat-label">Avg Price</div>
+                        <div class="dark-stat-value" id="plansAvgPrice">KES 0</div>
+                    </div>
+                </div>
+                
+                <!-- Search, Filter, and Toolbar -->
+                <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+                    <div class="input-group" style="flex:1;min-width:200px;">
+                        <span class="input-icon"><i class="fas fa-search"></i></span>
+                        <input type="text" id="plansSearchInput" class="form-input" 
+                               placeholder="Search plans..." 
+                               oninput="onPlansSearchInput()">
+                    </div>
+                    <select id="plansStatusFilter" class="form-input" style="width:auto;min-width:130px;" onchange="filterPlansByStatus()">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <select id="plansTvFilter" class="form-input" style="width:auto;min-width:130px;" onchange="filterPlansByTv()">
+                        <option value="">All Plans</option>
+                        <option value="tv">TV Plans</option>
+                        <option value="no_tv">Non-TV Plans</option>
+                    </select>
+                    <select id="plansSort" class="form-input" style="width:auto;min-width:130px;" onchange="sortPlans()">
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="name_asc">Name: A-Z</option>
+                        <option value="name_desc">Name: Z-A</option>
+                        <option value="duration_asc">Duration: Shortest</option>
+                        <option value="duration_desc">Duration: Longest</option>
+                    </select>
+                </div>
+                
+                <!-- View Toggle -->
+                <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
+                    <button class="btn btn-sm btn-primary view-toggle-btn active" id="view-table" onclick="togglePlansView('table')">
+                        <i class="fas fa-table"></i> Table
+                    </button>
+                    <button class="btn btn-sm btn-secondary view-toggle-btn" id="view-card" onclick="togglePlansView('card')">
+                        <i class="fas fa-th-large"></i> Cards
+                    </button>
+                    <button class="btn btn-primary" onclick="openPackageModal()" style="margin-left:auto;">
                         <i class="fas fa-plus"></i> Add Plan
                     </button>
                 </div>
-                <div class="dark-table-wrapper">
+                
+                <!-- Table View -->
+                <div class="dark-table-wrapper" id="plansTableView">
                     <table class="dark-table">
                         <thead>
                             <tr>
@@ -353,6 +402,11 @@
                         </thead>
                         <tbody id="packagesTableBody"></tbody>
                     </table>
+                </div>
+                
+                <!-- Card View -->
+                <div id="plansCardView" style="display:none;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;">
+                    <!-- Filled dynamically -->
                 </div>
             </div>
             
@@ -428,7 +482,7 @@
         </div>
     </div>
     
-    <!-- HOTSPOT USER DETAIL MODAL (NEW) -->
+    <!-- HOTSPOT USER DETAIL MODAL -->
     <div class="modal" id="hotspotUserDetailModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
@@ -436,6 +490,17 @@
                 <button class="modal-close" onclick="closeHotspotUserDetailModal()"><i class="fas fa-times"></i></button>
             </div>
             <div id="hotspotUserDetailContent"></div>
+        </div>
+    </div>
+    
+    <!-- PLAN DETAIL MODAL (NEW) -->
+    <div class="modal" id="planDetailModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-box"></i> Plan Details</h2>
+                <button class="modal-close" onclick="closePlanDetailModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="planDetailContent"></div>
         </div>
     </div>
     

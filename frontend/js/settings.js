@@ -1,5 +1,5 @@
 // ============================================================================
-// Lincoln's net - Settings Module (Complete)
+// Lincoln's net - Settings Module (Complete - FIXED)
 // Includes: Tabs, Save All, Reset, Change Password, Test Payment
 // ============================================================================
 
@@ -12,7 +12,6 @@ let allSettingsData = {};
 
 async function loadSettings() {
     await loadAllSettings();
-    initializeSettingsTabs();
 }
 
 // ============================================================================
@@ -51,10 +50,10 @@ async function loadAllSettings() {
 }
 
 // ============================================================================
-// SETTINGS TABS
+// RENDER SETTINGS TABS (FIXED - This is the function that was missing)
 // ============================================================================
 
-function initializeSettingsTabs() {
+function renderSettingsTabs() {
     const tabContainer = document.getElementById('settingsTabs');
     if (!tabContainer) return;
     
@@ -74,6 +73,10 @@ function initializeSettingsTabs() {
     `).join('');
 }
 
+// ============================================================================
+// SWITCH SETTINGS TAB
+// ============================================================================
+
 function switchSettingsTab(tabId) {
     settingsCurrentTab = tabId;
     
@@ -87,10 +90,27 @@ function switchSettingsTab(tabId) {
     renderCurrentTab();
 }
 
+// ============================================================================
+// RENDER CURRENT TAB
+// ============================================================================
+
 function renderCurrentTab() {
     const settingsContent = document.getElementById('settingsContent');
     if (!settingsContent) return;
     
+    // Special handling for security tab
+    if (settingsCurrentTab === 'security') {
+        renderSecurityTab();
+        return;
+    }
+    
+    // Special handling for payment tab (with test button)
+    if (settingsCurrentTab === 'payment') {
+        renderPaymentTab();
+        return;
+    }
+    
+    // Regular tabs
     const categorySettings = allSettingsData[settingsCurrentTab] || [];
     
     if (categorySettings.length === 0) {
@@ -112,13 +132,17 @@ function renderCurrentTab() {
     formHTML += `
         <div style="display:flex;gap:12px;margin-top:24px;">
             <button type="button" class="btn btn-primary" onclick="saveCurrentTabSettings()">
-                <i class="fas fa-save"></i> Save ${settingsCurrentTab.charAt(0).toUpperCase() + settingsCurrentTab.slice(1)} Settings
+                <i class="fas fa-save"></i> Save Settings
             </button>
         </div>
     </form>`;
     
     settingsContent.innerHTML = formHTML;
 }
+
+// ============================================================================
+// RENDER SETTING FIELD
+// ============================================================================
 
 function renderSettingField(setting) {
     const key = setting.setting_key;
@@ -127,7 +151,7 @@ function renderSettingField(setting) {
     const isSecret = setting.is_secret || false;
     
     // Feature toggles
-    if (key.startsWith('enable_') || key.startsWith('tv_') || key === 'debug_mode' || key === 'maintenance_mode') {
+    if (key.startsWith('enable_') || key === 'tv_support_enabled' || key === 'debug_mode' || key === 'maintenance_mode') {
         const isChecked = value === 'true' || value === '1';
         return `
             <div class="form-group">
@@ -178,12 +202,97 @@ function renderSettingField(setting) {
 }
 
 // ============================================================================
-// TOGGLE SECRET VISIBILITY
+// RENDER SECURITY TAB
+// ============================================================================
+
+function renderSecurityTab() {
+    const settingsContent = document.getElementById('settingsContent');
+    if (!settingsContent) return;
+    
+    settingsContent.innerHTML = `
+        <div class="form-section">
+            <h3 class="form-section-title" style="color:var(--dark-text);">
+                <i class="fas fa-key" style="color:#e53e3e;"></i> Change Admin Password
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" style="color:var(--dark-gray);">
+                    <i class="fas fa-lock" style="color:#e53e3e;"></i> Current Password
+                </label>
+                <input type="password" class="form-input" id="currentPassword" 
+                       placeholder="Enter current password"
+                       style="background:var(--dark-sidebar);border:1px solid var(--dark-border);color:var(--dark-text);">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" style="color:var(--dark-gray);">
+                    <i class="fas fa-key" style="color:#e53e3e;"></i> New Password
+                </label>
+                <input type="password" class="form-input" id="newPassword" 
+                       placeholder="Enter new password (min 6 characters)"
+                       style="background:var(--dark-sidebar);border:1px solid var(--dark-border);color:var(--dark-text);">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" style="color:var(--dark-gray);">
+                    <i class="fas fa-check" style="color:#48bb78;"></i> Confirm New Password
+                </label>
+                <input type="password" class="form-input" id="confirmPassword" 
+                       placeholder="Confirm new password"
+                       style="background:var(--dark-sidebar);border:1px solid var(--dark-border);color:var(--dark-text);">
+            </div>
+            
+            <button class="btn btn-primary" onclick="changePassword()">
+                <i class="fas fa-key"></i> Change Password
+            </button>
+        </div>
+    `;
+}
+
+// ============================================================================
+// RENDER PAYMENT TAB (with Test Connection)
+// ============================================================================
+
+function renderPaymentTab() {
+    const settingsContent = document.getElementById('settingsContent');
+    if (!settingsContent) return;
+    
+    const categorySettings = allSettingsData['payment'] || [];
+    
+    if (categorySettings.length === 0) {
+        settingsContent.innerHTML = '<p style="color:#a0aec0;text-align:center;padding:40px;">No payment settings</p>';
+        return;
+    }
+    
+    let formHTML = '<form id="settingsForm">';
+    
+    categorySettings.forEach(setting => {
+        formHTML += renderSettingField(setting);
+    });
+    
+    formHTML += `
+        <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" onclick="saveCurrentTabSettings()">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+            <button type="button" class="btn-test-connection" id="testPaymentBtn" onclick="testPaymentConnection()">
+                <i class="fas fa-plug"></i> Test Connection
+            </button>
+        </div>
+    </form>`;
+    
+    settingsContent.innerHTML = formHTML;
+}
+
+// ============================================================================
+// TOGGLE SETTING VISIBILITY
 // ============================================================================
 
 function toggleSettingVisibility(button) {
-    const input = button.previousElementSibling;
+    const input = button.parentElement.querySelector('input');
     const icon = button.querySelector('i');
+    
+    if (!input) return;
     
     if (input.type === 'password') {
         input.type = 'text';
@@ -243,7 +352,7 @@ async function saveCurrentTabSettings() {
     }
 }
 
-// Legacy function for backward compatibility
+// Legacy function
 async function saveSettings() {
     await saveCurrentTabSettings();
 }
@@ -320,7 +429,6 @@ async function changePassword() {
         
         if (data.success) {
             showNotification('Password changed successfully!', 'success');
-            // Clear password fields
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
@@ -368,134 +476,4 @@ async function testPaymentConnection() {
             testButton.innerHTML = '<i class="fas fa-plug"></i> Test Connection';
         }
     }
-}
-
-// ============================================================================
-// RENDER SECURITY TAB (Password Change)
-// ============================================================================
-
-function renderSecurityTab() {
-    const settingsContent = document.getElementById('settingsContent');
-    if (!settingsContent) return;
-    
-    settingsContent.innerHTML = `
-        <div class="form-section">
-            <h3 class="form-section-title" style="color:var(--dark-text);">
-                <i class="fas fa-key" style="color:#e53e3e;"></i> Change Admin Password
-            </h3>
-            
-            <div class="form-group">
-                <label class="form-label" style="color:var(--dark-gray);">
-                    <i class="fas fa-lock" style="color:#e53e3e;"></i> Current Password
-                </label>
-                <input type="password" class="form-input" id="currentPassword" 
-                       placeholder="Enter current password"
-                       style="background:var(--dark-sidebar);border:1px solid var(--dark-border);color:var(--dark-text);">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label" style="color:var(--dark-gray);">
-                    <i class="fas fa-key" style="color:#e53e3e;"></i> New Password
-                </label>
-                <input type="password" class="form-input" id="newPassword" 
-                       placeholder="Enter new password (min 6 characters)"
-                       style="background:var(--dark-sidebar);border:1px solid var(--dark-border);color:var(--dark-text);">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label" style="color:var(--dark-gray);">
-                    <i class="fas fa-check" style="color:#48bb78;"></i> Confirm New Password
-                </label>
-                <input type="password" class="form-input" id="confirmPassword" 
-                       placeholder="Confirm new password"
-                       style="background:var(--dark-sidebar);border:1px solid var(--dark-border);color:var(--dark-text);">
-            </div>
-            
-            <button class="btn btn-primary" onclick="changePassword()">
-                <i class="fas fa-key"></i> Change Password
-            </button>
-        </div>
-    `;
-}
-
-// ============================================================================
-// RENDER PAYMENT TAB (with Test Connection)
-// ============================================================================
-
-function renderPaymentTab() {
-    const categorySettings = allSettingsData['payment'] || [];
-    
-    if (categorySettings.length === 0) {
-        return;
-    }
-    
-    let formHTML = '<form id="settingsForm">';
-    
-    categorySettings.forEach(setting => {
-        formHTML += renderSettingField(setting);
-    });
-    
-    formHTML += `
-        <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-primary" onclick="saveCurrentTabSettings()">
-                <i class="fas fa-save"></i> Save Payment Settings
-            </button>
-            <button type="button" class="btn btn-success" id="testPaymentBtn" onclick="testPaymentConnection()">
-                <i class="fas fa-plug"></i> Test Connection
-            </button>
-        </div>
-    </form>`;
-    
-    const settingsContent = document.getElementById('settingsContent');
-    if (settingsContent) settingsContent.innerHTML = formHTML;
-}
-
-// ============================================================================
-// OVERRIDE renderCurrentTab FOR SPECIAL TABS
-// ============================================================================
-
-function renderCurrentTab() {
-    const settingsContent = document.getElementById('settingsContent');
-    if (!settingsContent) return;
-    
-    // Special handling for security tab
-    if (settingsCurrentTab === 'security') {
-        renderSecurityTab();
-        return;
-    }
-    
-    // Special handling for payment tab (with test button)
-    if (settingsCurrentTab === 'payment') {
-        renderPaymentTab();
-        return;
-    }
-    
-    // Regular tabs
-    const categorySettings = allSettingsData[settingsCurrentTab] || [];
-    
-    if (categorySettings.length === 0) {
-        settingsContent.innerHTML = `
-            <div style="text-align:center;padding:40px;color:#a0aec0;">
-                <i class="fas fa-cog" style="font-size:40px;display:block;margin-bottom:12px;"></i>
-                No settings in this category
-            </div>
-        `;
-        return;
-    }
-    
-    let formHTML = '<form id="settingsForm">';
-    
-    categorySettings.forEach(setting => {
-        formHTML += renderSettingField(setting);
-    });
-    
-    formHTML += `
-        <div style="display:flex;gap:12px;margin-top:24px;">
-            <button type="button" class="btn btn-primary" onclick="saveCurrentTabSettings()">
-                <i class="fas fa-save"></i> Save Settings
-            </button>
-        </div>
-    </form>`;
-    
-    settingsContent.innerHTML = formHTML;
 }

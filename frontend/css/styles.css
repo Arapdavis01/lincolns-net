@@ -2116,3 +2116,316 @@ body {
         font-size: 10px;
     }
 }
+/* ============================================================================
+   PLANS PAGE STYLES
+   Add these to the END of your styles.css
+   ============================================================================ */
+
+/* ============================================================================
+   TOGGLE SWITCH (For Active/Inactive Status)
+   ============================================================================ */
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 45px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #3a3a4d;
+    border-radius: 24px;
+    transition: 0.3s;
+}
+
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: #48bb78;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(21px);
+}
+
+/* ============================================================================
+   PLAN CARD VIEW (Grid Layout)
+   ============================================================================ */
+
+.plan-card {
+    background: var(--dark-card);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-top: 4px solid #007bff;
+    position: relative;
+}
+
+.plan-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.plan-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.plan-card-header h4 {
+    color: var(--dark-text);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.plan-card-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: #48bb78;
+    margin-bottom: 12px;
+}
+
+.plan-card-details {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.plan-card-details span {
+    color: var(--dark-gray);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.plan-card-details i {
+    color: #007bff;
+}
+
+.plan-card-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.plan-card-actions {
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid var(--dark-border);
+    padding-top: 12px;
+}
+
+/* ============================================================================
+   VIEW TOGGLE BUTTONS
+   ============================================================================ */
+
+.view-toggle-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid var(--dark-border);
+    background: var(--dark-card);
+    color: var(--dark-gray);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.view-toggle-btn:hover {
+    background: var(--dark-hover);
+    color: var(--dark-text);
+}
+
+.view-toggle-btn.active {
+    background: #007bff;
+    color: var(--white);
+    border-color: #007bff;
+}
+
+/* ============================================================================
+   PLANS TOOLBAR
+   ============================================================================ */
+
+.plans-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.plans-toolbar .input-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.plans-toolbar .form-input {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text);
+}
+
+.plans-toolbar .form-input:focus {
+    border-color: #007bff;
+}
+
+.plans-toolbar .form-input::placeholder {
+    color: var(--dark-gray);
+}
+
+/* ============================================================================
+   PLAN DETAIL MODAL
+   ============================================================================ */
+
+#planDetailModal .modal-content {
+    max-width: 550px;
+}
+
+.plan-detail-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.plan-detail-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 24px;
+    color: var(--white);
+}
+
+.plan-detail-name {
+    color: var(--dark-text);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 12px 0 4px;
+}
+
+.plan-detail-description {
+    color: var(--dark-gray);
+    font-size: 14px;
+}
+
+.plan-detail-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.plan-detail-stat {
+    background: var(--dark-sidebar);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.plan-detail-stat small {
+    color: var(--dark-gray);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.plan-detail-stat div {
+    color: var(--dark-text);
+    font-weight: 700;
+    font-size: 18px;
+    margin-top: 4px;
+}
+
+/* ============================================================================
+   DUPLICATE BUTTON
+   ============================================================================ */
+
+.btn-duplicate {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    background: rgba(0, 123, 255, 0.2);
+    color: #007bff;
+    border: 1px solid #007bff;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-duplicate:hover {
+    background: #007bff;
+    color: var(--white);
+}
+
+/* ============================================================================
+   RESPONSIVE PLANS PAGE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .plans-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .plans-toolbar .input-group {
+        min-width: 100%;
+    }
+    
+    .plans-toolbar select {
+        width: 100%;
+    }
+    
+    .plan-detail-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    #plansCardView {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .plan-card-price {
+        font-size: 20px;
+    }
+    
+    .view-toggle-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+}

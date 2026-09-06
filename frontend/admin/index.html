@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-    <!-- LOGIN VIEW (Unchanged) -->
+    <!-- LOGIN VIEW -->
     <div id="loginView" class="auth-container" style="display: none;">
         <div class="auth-card">
             <div class="auth-header">
@@ -74,7 +74,7 @@
                 </div>
             </div>
             
-            <!-- DASHBOARD SECTION (Unchanged) -->
+            <!-- DASHBOARD SECTION -->
             <div id="dashboard-section">
                 <div class="dark-stats-grid">
                     <div class="dark-stat-card blue">
@@ -158,7 +158,7 @@
                 </div>
             </div>
             
-            <!-- USERS SECTION (Unchanged) -->
+            <!-- USERS SECTION -->
             <div id="users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-users"></i> Users</h1>
                 
@@ -223,7 +223,7 @@
                 <div id="usersPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap;"></div>
             </div>
             
-            <!-- HOTSPOT USERS SECTION (Unchanged - already enhanced) -->
+            <!-- HOTSPOT USERS SECTION -->
             <div id="hotspot-users-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-wifi"></i> Hotspot Users</h1>
                 
@@ -288,7 +288,7 @@
                 </div>
             </div>
             
-            <!-- VOUCHERS SECTION (Unchanged) -->
+            <!-- VOUCHERS SECTION -->
             <div id="vouchers-section" style="display: none;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <h1 class="page-title" style="margin:0;"><i class="fas fa-ticket-alt"></i> Vouchers</h1>
@@ -314,13 +314,10 @@
                 </div>
             </div>
             
-            <!-- ============================================================
-            PLANS SECTION (ENHANCED)
-            ============================================================ -->
+            <!-- PLANS SECTION -->
             <div id="plans-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-box"></i> Plans</h1>
                 
-                <!-- Plans Stats Cards -->
                 <div class="dark-stats-grid" style="margin-bottom: 20px;">
                     <div class="dark-stat-card blue">
                         <div class="dark-stat-icon blue"><i class="fas fa-box"></i></div>
@@ -344,7 +341,6 @@
                     </div>
                 </div>
                 
-                <!-- Search, Filter, and Toolbar -->
                 <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
                     <div class="input-group" style="flex:1;min-width:200px;">
                         <span class="input-icon"><i class="fas fa-search"></i></span>
@@ -372,7 +368,6 @@
                     </select>
                 </div>
                 
-                <!-- View Toggle -->
                 <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
                     <button class="btn btn-sm btn-primary view-toggle-btn active" id="view-table" onclick="togglePlansView('table')">
                         <i class="fas fa-table"></i> Table
@@ -385,7 +380,6 @@
                     </button>
                 </div>
                 
-                <!-- Table View -->
                 <div class="dark-table-wrapper" id="plansTableView">
                     <table class="dark-table">
                         <thead>
@@ -404,13 +398,10 @@
                     </table>
                 </div>
                 
-                <!-- Card View -->
-                <div id="plansCardView" style="display:none;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;">
-                    <!-- Filled dynamically -->
-                </div>
+                <div id="plansCardView" style="display:none;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;"></div>
             </div>
             
-            <!-- PAYMENTS SECTION (Unchanged) -->
+            <!-- PAYMENTS SECTION -->
             <div id="payments-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-money-bill-wave"></i> Payments</h1>
                 <div class="dark-table-wrapper">
@@ -431,7 +422,7 @@
                 </div>
             </div>
             
-            <!-- REPORTS SECTION (Unchanged) -->
+            <!-- REPORTS SECTION -->
             <div id="reports-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-file-alt"></i> Reports</h1>
                 <div class="dark-stats-grid">
@@ -458,7 +449,7 @@
                 </div>
             </div>
             
-            <!-- SETTINGS SECTION (Unchanged) -->
+            <!-- SETTINGS SECTION -->
             <div id="settings-section" style="display: none;">
                 <h1 class="page-title"><i class="fas fa-cog"></i> Settings</h1>
                 <div class="dark-chart-card">
@@ -493,7 +484,7 @@
         </div>
     </div>
     
-    <!-- PLAN DETAIL MODAL (NEW) -->
+    <!-- PLAN DETAIL MODAL -->
     <div class="modal" id="planDetailModal">
         <div class="modal-content" style="max-width: 550px;">
             <div class="modal-header">
@@ -504,76 +495,193 @@
         </div>
     </div>
     
-    <!-- PACKAGE MODAL (Unchanged) -->
+    <!-- ========================================================================
+    PACKAGE MODAL (MODERN & STYLISH)
+    ======================================================================== -->
     <div class="modal" id="packageModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="packageModalTitle"><i class="fas fa-plus-circle"></i> Add Plan</h2>
-                <button class="modal-close" onclick="closePackageModal()"><i class="fas fa-times"></i></button>
+        <div class="modal-content" style="max-width: 550px; padding: 0; overflow: hidden;">
+            
+            <!-- Modern Gradient Header -->
+            <div class="modal-header" style="background: var(--gradient); padding: 20px 24px; margin-bottom: 0; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                <h2 id="packageModalTitle" style="color: var(--white); font-size: 20px;">
+                    <i class="fas fa-plus-circle"></i> Add Plan
+                </h2>
+                <button class="modal-close" onclick="closePackageModal()" style="color: var(--white); font-size: 22px;">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <form id="packageForm">
+            
+            <!-- Form Body -->
+            <form id="packageForm" style="padding: 24px;">
                 <input type="hidden" id="packageId" value="">
                 
+                <!-- Section 1: Basic Information -->
                 <div class="form-section">
-                    <h3 class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</h3>
+                    <h3 class="form-section-title" style="color: var(--dark-text);">
+                        <i class="fas fa-info-circle" style="color: #007bff;"></i> Basic Information
+                    </h3>
+                    
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-tag"></i> Package Name *</label>
-                        <input type="text" class="form-input" id="packageName" required>
+                        <label class="form-label" style="color: var(--dark-gray);">
+                            <i class="fas fa-tag" style="color: #007bff;"></i> Package Name *
+                        </label>
+                        <input type="text" class="form-input" id="packageName" 
+                               placeholder="e.g., Daily Pass" required
+                               style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
                     </div>
+                    
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-align-left"></i> Description</label>
-                        <textarea class="form-input" id="packageDescription" rows="3"></textarea>
+                        <label class="form-label" style="color: var(--dark-gray);">
+                            <i class="fas fa-align-left" style="color: #007bff;"></i> Description
+                        </label>
+                        <textarea class="form-input" id="packageDescription" rows="3" 
+                                  placeholder="Describe the package..."
+                                  style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);"></textarea>
                     </div>
                 </div>
                 
+                <!-- Section 2: Pricing -->
                 <div class="form-section">
-                    <h3 class="form-section-title"><i class="fas fa-money-bill-wave"></i> Pricing & Duration</h3>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                        <div class="form-group">
-                            <label class="form-label">Price (KES) *</label>
-                            <input type="number" class="form-input" id="packagePrice" min="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Duration (seconds) *</label>
-                            <input type="number" class="form-input" id="packageDuration" min="60" required>
+                    <h3 class="form-section-title" style="color: var(--dark-text);">
+                        <i class="fas fa-money-bill-wave" style="color: #48bb78;"></i> Pricing
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--dark-gray);">
+                            <i class="fas fa-money-bill" style="color: #48bb78;"></i> Price (KES) *
+                        </label>
+                        <input type="number" class="form-input" id="packagePrice" min="1" 
+                               placeholder="e.g., 300" required
+                               style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
+                        
+                        <!-- Quick Price Presets -->
+                        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+                            <button type="button" class="preset-btn" onclick="setPrice(5)">KES 5</button>
+                            <button type="button" class="preset-btn" onclick="setPrice(10)">KES 10</button>
+                            <button type="button" class="preset-btn" onclick="setPrice(20)">KES 20</button>
+                            <button type="button" class="preset-btn" onclick="setPrice(50)">KES 50</button>
+                            <button type="button" class="preset-btn" onclick="setPrice(100)">KES 100</button>
+                            <button type="button" class="preset-btn" onclick="setPrice(300)">KES 300</button>
                         </div>
                     </div>
                 </div>
                 
+                <!-- Section 3: Duration -->
                 <div class="form-section">
-                    <h3 class="form-section-title"><i class="fas fa-tachometer-alt"></i> Bandwidth</h3>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                        <div class="form-group">
-                            <label class="form-label">Download</label>
-                            <input type="text" class="form-input" id="packageDownload" value="5M" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Upload</label>
-                            <input type="text" class="form-input" id="packageUpload" value="2M" required>
+                    <h3 class="form-section-title" style="color: var(--dark-text);">
+                        <i class="fas fa-clock" style="color: #ed8936;"></i> Duration
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--dark-gray);">
+                            <i class="fas fa-hourglass-half" style="color: #ed8936;"></i> Duration (seconds) *
+                        </label>
+                        <input type="number" class="form-input" id="packageDuration" min="60" 
+                               placeholder="e.g., 86400" required
+                               style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
+                        
+                        <!-- Quick Duration Presets -->
+                        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+                            <button type="button" class="preset-btn" onclick="setDuration(1800)">30 min</button>
+                            <button type="button" class="preset-btn" onclick="setDuration(3600)">1 Hour</button>
+                            <button type="button" class="preset-btn" onclick="setDuration(7200)">2 Hours</button>
+                            <button type="button" class="preset-btn" onclick="setDuration(18000)">5 Hours</button>
+                            <button type="button" class="preset-btn" onclick="setDuration(43200)">12 Hours</button>
+                            <button type="button" class="preset-btn" onclick="setDuration(86400)">1 Day</button>
+                            <button type="button" class="preset-btn" onclick="setDuration(604800)">1 Week</button>
+                            <button type="button" class="preset-btn" onclick="setDuration(2592000)">1 Month</button>
                         </div>
                     </div>
                 </div>
                 
+                <!-- Section 4: Bandwidth -->
                 <div class="form-section">
-                    <h3 class="form-section-title"><i class="fas fa-devices"></i> Device Settings</h3>
+                    <h3 class="form-section-title" style="color: var(--dark-text);">
+                        <i class="fas fa-tachometer-alt" style="color: #9f7aea;"></i> Bandwidth
+                    </h3>
+                    
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
-                            <label class="form-label">Max Users *</label>
-                            <input type="number" class="form-input" id="packageMaxUsers" min="1" max="10" value="1" required>
+                            <label class="form-label" style="color: var(--dark-gray);">
+                                <i class="fas fa-download" style="color: #9f7aea;"></i> Download
+                            </label>
+                            <input type="text" class="form-input" id="packageDownload" value="5M" required
+                                   style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
+                            
+                            <!-- Quick Download Presets -->
+                            <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('3M')">3M</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('5M')">5M</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('7M')">7M</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('10M')">10M</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('20M')">20M</button>
+                            </div>
                         </div>
+                        
                         <div class="form-group">
-                            <label class="form-label">TV Support</label>
-                            <div class="form-checkbox">
-                                <input type="checkbox" id="packageSupportsTv">
-                                <span>Supports TV</span>
+                            <label class="form-label" style="color: var(--dark-gray);">
+                                <i class="fas fa-upload" style="color: #9f7aea;"></i> Upload
+                            </label>
+                            <input type="text" class="form-input" id="packageUpload" value="2M" required
+                                   style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
+                            
+                            <!-- Quick Upload Presets -->
+                            <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setUpload('1M')">1M</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setUpload('2M')">2M</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setUpload('3M')">3M</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setUpload('5M')">5M</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
-                    <button type="button" class="btn btn-secondary" onclick="closePackageModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+                <!-- Section 5: Device Settings -->
+                <div class="form-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                    <h3 class="form-section-title" style="color: var(--dark-text);">
+                        <i class="fas fa-devices" style="color: #38bdf8;"></i> Device Settings
+                    </h3>
+                    
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label" style="color: var(--dark-gray);">
+                                <i class="fas fa-users" style="color: #38bdf8;"></i> Max Users *
+                            </label>
+                            <input type="number" class="form-input" id="packageMaxUsers" min="1" max="10" value="1" required
+                                   style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
+                            
+                            <!-- Quick User Count -->
+                            <div style="display:flex;gap:4px;margin-top:6px;">
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setMaxUsers(1)">1</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setMaxUsers(2)">2</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setMaxUsers(3)">3</button>
+                                <button type="button" class="preset-btn preset-btn-sm" onclick="setMaxUsers(5)">5</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" style="color: var(--dark-gray);">
+                                <i class="fas fa-tv" style="color: #38bdf8;"></i> TV Support
+                            </label>
+                            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="packageSupportsTv">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span style="color: var(--dark-gray); font-size: 14px;">Supports TV</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--dark-border);">
+                    <button type="button" class="btn btn-secondary" onclick="closePackageModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Plan
+                    </button>
                 </div>
             </form>
         </div>
@@ -589,5 +697,28 @@
     <script src="../js/payments.js"></script>
     <script src="../js/reports.js"></script>
     <script src="../js/settings.js"></script>
+    
+    <!-- Preset Functions for Package Modal -->
+    <script>
+        function setPrice(price) {
+            document.getElementById('packagePrice').value = price;
+        }
+        
+        function setDuration(seconds) {
+            document.getElementById('packageDuration').value = seconds;
+        }
+        
+        function setDownload(speed) {
+            document.getElementById('packageDownload').value = speed;
+        }
+        
+        function setUpload(speed) {
+            document.getElementById('packageUpload').value = speed;
+        }
+        
+        function setMaxUsers(count) {
+            document.getElementById('packageMaxUsers').value = count;
+        }
+    </script>
 </body>
 </html>

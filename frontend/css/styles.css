@@ -2429,3 +2429,164 @@ body {
         font-size: 11px;
     }
 }
+/* ============================================================================
+   MODERN PACKAGE MODAL STYLES
+   Add these to the END of your styles.css
+   ============================================================================ */
+
+/* ============================================================================
+   PRESET BUTTONS (Quick Select)
+   ============================================================================ */
+
+.preset-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    border-radius: 6px;
+    background: var(--dark-card);
+    color: var(--dark-text);
+    border: 1px solid var(--dark-border);
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.preset-btn:hover {
+    background: #007bff;
+    color: var(--white);
+    border-color: #007bff;
+    transform: translateY(-1px);
+}
+
+.preset-btn:active {
+    transform: translateY(0);
+}
+
+.preset-btn-sm {
+    padding: 4px 8px;
+    font-size: 10px;
+}
+
+/* ============================================================================
+   MODERN MODAL HEADER (Gradient)
+   ============================================================================ */
+
+.modal-header-gradient {
+    background: var(--gradient);
+    padding: 20px 24px;
+    margin-bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header-gradient h2 {
+    color: var(--white);
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header-gradient h2 i {
+    font-size: 22px;
+}
+
+.modal-header-gradient .modal-close {
+    color: var(--white);
+    font-size: 22px;
+}
+
+.modal-header-gradient .modal-close:hover {
+    color: var(--white);
+    opacity: 0.8;
+}
+
+/* ============================================================================
+   DARK MODE FORM INPUTS IN MODAL
+   ============================================================================ */
+
+.dark-modal-form .form-input {
+    background: var(--dark-sidebar);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text);
+    border-radius: 8px;
+}
+
+.dark-modal-form .form-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.dark-modal-form .form-input::placeholder {
+    color: var(--dark-gray);
+}
+
+.dark-modal-form .form-label {
+    color: var(--dark-gray);
+}
+
+.dark-modal-form .form-label i {
+    color: #007bff;
+}
+
+/* Section Title Colors */
+.dark-modal-form .form-section-title {
+    color: var(--dark-text);
+}
+
+.dark-modal-form .form-section-title i.info { color: #007bff; }
+.dark-modal-form .form-section-title i.money { color: #48bb78; }
+.dark-modal-form .form-section-title i.clock { color: #ed8936; }
+.dark-modal-form .form-section-title i.speed { color: #9f7aea; }
+.dark-modal-form .form-section-title i.device { color: #38bdf8; }
+
+/* ============================================================================
+   PRESET CONTAINER
+   ============================================================================ */
+
+.preset-container {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+/* ============================================================================
+   MODAL FOOTER BUTTONS
+   ============================================================================ */
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--dark-border);
+}
+
+/* ============================================================================
+   RESPONSIVE PACKAGE MODAL
+   ============================================================================ */
+
+@media (max-width: 480px) {
+    .preset-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+    }
+    
+    .preset-btn-sm {
+        padding: 3px 6px;
+        font-size: 9px;
+    }
+    
+    .modal-header-gradient {
+        padding: 16px 20px;
+    }
+    
+    .modal-header-gradient h2 {
+        font-size: 18px;
+    }
+}

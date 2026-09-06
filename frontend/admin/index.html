@@ -496,22 +496,22 @@
     </div>
     
     <!-- ========================================================================
-    PACKAGE MODAL (MODERN & STYLISH)
+    PACKAGE MODAL (FIXED - SCROLLABLE, SHOWS ALL FIELDS)
     ======================================================================== -->
     <div class="modal" id="packageModal">
-        <div class="modal-content" style="max-width: 550px; padding: 0; overflow: hidden;">
+        <div class="modal-content" style="max-width: 550px; padding: 0; overflow-y: auto; max-height: 90vh; background: var(--dark-card);">
             
-            <!-- Modern Gradient Header -->
-            <div class="modal-header" style="background: var(--gradient); padding: 20px 24px; margin-bottom: 0; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
-                <h2 id="packageModalTitle" style="color: var(--white); font-size: 20px;">
+            <!-- Sticky Gradient Header -->
+            <div style="background: var(--gradient); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                <h2 id="packageModalTitle" style="color: var(--white); font-size: 20px; margin: 0;">
                     <i class="fas fa-plus-circle"></i> Add Plan
                 </h2>
-                <button class="modal-close" onclick="closePackageModal()" style="color: var(--white); font-size: 22px;">
+                <button class="modal-close" onclick="closePackageModal()" style="color: var(--white); font-size: 22px; background: none; border: none; cursor: pointer;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <!-- Form Body -->
+            <!-- Scrollable Form Body -->
             <form id="packageForm" style="padding: 24px;">
                 <input type="hidden" id="packageId" value="">
                 
@@ -534,7 +534,7 @@
                         <label class="form-label" style="color: var(--dark-gray);">
                             <i class="fas fa-align-left" style="color: #007bff;"></i> Description
                         </label>
-                        <textarea class="form-input" id="packageDescription" rows="3" 
+                        <textarea class="form-input" id="packageDescription" rows="2" 
                                   placeholder="Describe the package..."
                                   style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);"></textarea>
                     </div>
@@ -554,7 +554,6 @@
                                placeholder="e.g., 300" required
                                style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
                         
-                        <!-- Quick Price Presets -->
                         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
                             <button type="button" class="preset-btn" onclick="setPrice(5)">KES 5</button>
                             <button type="button" class="preset-btn" onclick="setPrice(10)">KES 10</button>
@@ -580,11 +579,9 @@
                                placeholder="e.g., 86400" required
                                style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
                         
-                        <!-- Quick Duration Presets -->
                         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
                             <button type="button" class="preset-btn" onclick="setDuration(1800)">30 min</button>
                             <button type="button" class="preset-btn" onclick="setDuration(3600)">1 Hour</button>
-                            <button type="button" class="preset-btn" onclick="setDuration(7200)">2 Hours</button>
                             <button type="button" class="preset-btn" onclick="setDuration(18000)">5 Hours</button>
                             <button type="button" class="preset-btn" onclick="setDuration(43200)">12 Hours</button>
                             <button type="button" class="preset-btn" onclick="setDuration(86400)">1 Day</button>
@@ -608,13 +605,11 @@
                             <input type="text" class="form-input" id="packageDownload" value="5M" required
                                    style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
                             
-                            <!-- Quick Download Presets -->
                             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('3M')">3M</button>
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('5M')">5M</button>
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('7M')">7M</button>
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('10M')">10M</button>
-                                <button type="button" class="preset-btn preset-btn-sm" onclick="setDownload('20M')">20M</button>
                             </div>
                         </div>
                         
@@ -625,7 +620,6 @@
                             <input type="text" class="form-input" id="packageUpload" value="2M" required
                                    style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
                             
-                            <!-- Quick Upload Presets -->
                             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setUpload('1M')">1M</button>
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setUpload('2M')">2M</button>
@@ -650,7 +644,6 @@
                             <input type="number" class="form-input" id="packageMaxUsers" min="1" max="10" value="1" required
                                    style="background: var(--dark-sidebar); border: 1px solid var(--dark-border); color: var(--dark-text);">
                             
-                            <!-- Quick User Count -->
                             <div style="display:flex;gap:4px;margin-top:6px;">
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setMaxUsers(1)">1</button>
                                 <button type="button" class="preset-btn preset-btn-sm" onclick="setMaxUsers(2)">2</button>
@@ -674,8 +667,8 @@
                     </div>
                 </div>
                 
-                <!-- Action Buttons -->
-                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--dark-border);">
+                <!-- Sticky Footer Buttons -->
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid var(--dark-border); position: sticky; bottom: 0; background: var(--dark-card); z-index: 10;">
                     <button type="button" class="btn btn-secondary" onclick="closePackageModal()">
                         <i class="fas fa-times"></i> Cancel
                     </button>
@@ -698,7 +691,7 @@
     <script src="../js/reports.js"></script>
     <script src="../js/settings.js"></script>
     
-    <!-- Preset Functions for Package Modal -->
+    <!-- Preset Functions -->
     <script>
         function setPrice(price) {
             document.getElementById('packagePrice').value = price;

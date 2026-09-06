@@ -2590,3 +2590,285 @@ body {
         font-size: 18px;
     }
 }
+/* ============================================================================
+   SETTINGS PAGE STYLES
+   Add these to the END of your styles.css
+   ============================================================================ */
+
+/* ============================================================================
+   SETTINGS TABS NAVIGATION
+   ============================================================================ */
+
+.settings-tabs-container {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--dark-border);
+    padding-bottom: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.settings-tab {
+    padding: 12px 20px;
+    background: transparent;
+    color: var(--dark-gray);
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+
+.settings-tab i {
+    font-size: 16px;
+}
+
+.settings-tab:hover {
+    color: var(--dark-text);
+    background: var(--dark-hover);
+    border-radius: 6px 6px 0 0;
+}
+
+.settings-tab.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    font-weight: 600;
+}
+
+.settings-tab.active i {
+    color: #007bff;
+}
+
+/* ============================================================================
+   SETTINGS CONTENT AREA
+   ============================================================================ */
+
+.settings-content-area {
+    background: var(--dark-card);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    min-height: 300px;
+}
+
+/* ============================================================================
+   SETTINGS FORM FIELDS
+   ============================================================================ */
+
+#settingsForm .form-group {
+    margin-bottom: 20px;
+}
+
+#settingsForm .form-label {
+    color: var(--dark-gray);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#settingsForm .form-label i {
+    color: #007bff;
+    margin-right: 6px;
+    width: 16px;
+    text-align: center;
+}
+
+#settingsForm .form-input {
+    background: var(--dark-sidebar);
+    border: 1px solid var(--dark-border);
+    color: var(--dark-text);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+}
+
+#settingsForm .form-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+#settingsForm .form-input::placeholder {
+    color: var(--dark-gray);
+    font-size: 13px;
+}
+
+/* ============================================================================
+   SETTINGS TOGGLE ROW
+   ============================================================================ */
+
+.settings-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--dark-border);
+}
+
+.settings-toggle-row:last-child {
+    border-bottom: none;
+}
+
+.settings-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--dark-gray);
+    font-size: 14px;
+}
+
+.settings-toggle-label i {
+    color: #007bff;
+    font-size: 16px;
+}
+
+/* ============================================================================
+   SECRET FIELD (Password/Masked)
+   ============================================================================ */
+
+.settings-secret-field {
+    position: relative;
+}
+
+.settings-secret-field .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--dark-gray);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+}
+
+.settings-secret-field .password-toggle:hover {
+    color: #007bff;
+}
+
+/* ============================================================================
+   SAVE BUTTONS
+   ============================================================================ */
+
+.settings-save-bar {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--dark-border);
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+/* ============================================================================
+   RESET BUTTON AREA
+   ============================================================================ */
+
+.settings-reset-area {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.settings-reset-area .btn {
+    font-size: 13px;
+    padding: 8px 16px;
+}
+
+/* ============================================================================
+   CHANGE PASSWORD FORM
+   ============================================================================ */
+
+#changePasswordForm {
+    max-width: 400px;
+}
+
+#changePasswordForm .form-group {
+    margin-bottom: 16px;
+}
+
+/* ============================================================================
+   TEST PAYMENT BUTTON
+   ============================================================================ */
+
+.btn-test-connection {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+    border: 1px solid #48bb78;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-test-connection:hover {
+    background: #48bb78;
+    color: var(--white);
+}
+
+.btn-test-connection:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================================================
+   RESPONSIVE SETTINGS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .settings-tabs-container {
+        gap: 4px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+    
+    .settings-tab {
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+    
+    .settings-tab i {
+        font-size: 14px;
+    }
+    
+    .settings-content-area {
+        padding: 16px;
+    }
+    
+    .settings-save-bar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .settings-save-bar .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-tab {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+    
+    .settings-tab i {
+        font-size: 12px;
+    }
+    
+    .settings-toggle-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
